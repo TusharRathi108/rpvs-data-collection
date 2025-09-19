@@ -23,10 +23,16 @@ import {
   type BankDetails,
   type ProposalMaster,
   getProposalColumns,
+  type Department,
+  getDepartmentColumns,
+  getImplementationAgencyColumns,
+  type ImplementationAgency,
 } from "@/components/data-table/columns";
 import PageLoader from "@/components/mini-components/page-loader";
 import ProposalForm from "@/components/mini-components/proposal-form";
 import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
+import DepartmentMasterForm from "@/components/mini-components/department-form";
+import ImplementationAgencyForm from "@/components/mini-components/ia-form";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -40,6 +46,31 @@ const getTabOptions = (roleName?: string) => {
         label: "BANK MASTER",
         form: BankMasterForm,
         searchKey: "bank_name",
+      },
+    } as const;
+  }
+
+  if (roleName === "Planning") {
+    return {
+      "budget-master": {
+        label: "BUDGET MASTER",
+        form: BudgetHeadForm,
+        searchKey: "district_name",
+      },
+      "bank-master": {
+        label: "BANK MASTER",
+        form: BankMasterForm,
+        searchKey: "bank_name",
+      },
+      "department-master": {
+        label: "DEPARTMENT MASTER",
+        form: DepartmentMasterForm,
+        searchKey: "department_name",
+      },
+      "ia-master": {
+        label: "IMPLEMENTATION AGENCY MASTER",
+        form: ImplementationAgencyForm,
+        searchKey: "agency_name",
       },
     } as const;
   }
@@ -71,6 +102,10 @@ const HomePage = () => {
   const [proposalTableData, setProposalTableData] = useState<ProposalMaster[]>(
     []
   );
+  const [departmentTableData, setDepartmentTableData] = useState<Department[]>(
+    []
+  );
+  const [iaTableData, setIATableData] = useState<ImplementationAgency[]>([]);
 
   // selected row states
   const [selectedBankHead, setSelectedBankHead] = useState<BankDetails | null>(
@@ -81,6 +116,12 @@ const HomePage = () => {
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalMaster | null>(null);
 
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department | null>(null);
+  const [selectedIA, setSelectedIA] = useState<ImplementationAgency | null>(
+    null
+  );
+
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
   );
@@ -88,6 +129,8 @@ const HomePage = () => {
   const handleEditBankHead = (row: BankDetails) => setSelectedBankHead(row);
   const handleEditBudgetHead = (row: BudgetHead) => setSelectedBudgetHead(row);
   const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
+  const handleEditDepartment = (row: Department) => setSelectedDepartment(row);
+  const handleEditIA = (row: ImplementationAgency) => setSelectedIA(row);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -156,21 +199,72 @@ const HomePage = () => {
     }
   }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
 
+  useEffect(() => {
+    if (budgetHeadsError) console.error(budgetHeadsError);
+    if (bankHeadsError) console.error(bankHeadsError);
+    if (proposalsError) console.error(proposalsError);
+  }, [budgetHeadsError, bankHeadsError, proposalsError]);
+
   //! Error handling
   useEffect(() => {
-    if (budgetHeadsError) {
-      toast.error("Failed to fetch budget head data");
-      console.error("Budget head API error:", budgetHeadsError);
+    if (activeTab === "budget-master") {
+      setBudgetTableData(processedBudgetHeads);
+    } else if (activeTab === "bank-master") {
+      setBankTableData(processedBankHeads);
+    } else if (activeTab === "proposal-master") {
+      setProposalTableData(processedProposals);
+    } else if (activeTab === "department-master") {
+      setDepartmentTableData([
+        {
+          _id: "1",
+          department_name: "Education",
+          contact_person: "Rajesh Kumar",
+          contact_number: "9876543210",
+          contact_email: "edu@punjab.gov.in",
+        },
+        {
+          _id: "2",
+          department_name: "Health",
+          contact_person: "Meena Sharma",
+          contact_number: "9876501234",
+          contact_email: "health@punjab.gov.in",
+        },
+      ]);
+    } else if (activeTab === "ia-master") {
+      setIATableData([
+        {
+          _id: "1",
+          financial_year: "2025-26",
+          district_name: "Amritsar",
+          block_name: "Majitha",
+          agency_name: "Punjab Infrastructure Dev. Corp",
+          contact_person: "Arun Verma",
+          contact_number: "9988776655",
+          contact_email: "pidc@punjab.gov.in",
+        },
+        {
+          _id: "2",
+          financial_year: "2025-26",
+          district_name: "Ludhiana",
+          block_name: "Samrala",
+          agency_name: "Punjab Rural Works Agency",
+          contact_person: "Simran Kaur",
+          contact_number: "9876543210",
+          contact_email: "simran@punjab.gov.in",
+        },
+        {
+          _id: "3",
+          financial_year: "2024-25",
+          district_name: "Patiala",
+          block_name: "Nabha",
+          agency_name: "Punjab Water Supply & Sanitation Dept.",
+          contact_person: "Harpreet Singh",
+          contact_number: "9123456780",
+          contact_email: "harpreet@punjab.gov.in",
+        },
+      ]);
     }
-    if (bankHeadsError) {
-      toast.error("Failed to fetch bank head data");
-      console.error("Bank head API error:", bankHeadsError);
-    }
-    if (proposalsError) {
-      toast.error("Failed to fetch proposal data");
-      console.error("Proposal API error:", proposalsError);
-    }
-  }, [budgetHeadsError, bankHeadsError, proposalsError]);
+  }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
 
   //* Logout
   const handleLogout = async () => {
@@ -275,6 +369,28 @@ const HomePage = () => {
       );
     }
 
+    if (activeTab === "department-master") {
+      return (
+        <DepartmentMasterForm
+          initialData={selectedDepartment}
+          onSuccess={() => setSelectedDepartment(null)}
+          districts={[]}
+          isLoading={false}
+        />
+      );
+    }
+
+    if (activeTab === "ia-master") {
+      return (
+        <ImplementationAgencyForm
+          initialData={selectedIA}
+          onSuccess={() => setSelectedIA(null)}
+          districts={[]}
+          isLoading={false}
+        />
+      );
+    }
+
     return null;
   };
 
@@ -317,11 +433,34 @@ const HomePage = () => {
       );
     }
 
+    //! working
+    if (activeTab === "department-master") {
+      return (
+        <DataTable
+          columns={getDepartmentColumns((row) => handleEditDepartment(row))}
+          data={departmentTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
+    if (activeTab === "ia-master") {
+      return (
+        <DataTable
+          columns={getImplementationAgencyColumns((row) => handleEditIA(row))}
+          data={iaTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
     return null;
   };
 
   return (
-    <main className="p-2 flex flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
+    <main className="p-2 flex min-h-screen flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
       <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
         <h1 className="text-2xl drop-shadow-2xl">
           📜 Rangla Punjab Vikas Scheme
@@ -336,7 +475,7 @@ const HomePage = () => {
       </nav>
 
       <div className="flex flex-col items-center gap-2 w-full">
-        <section className="flex flex-col w-2/6">
+        <section className="flex flex-col w-5/6">
           <div className="flex flex-col gap-5 card backdrop-blur-md overflow-hidden">
             <div className="flex p-2 gap-2 bg-white/50 rounded-2xl">
               {Object.entries(TAB_OPTIONS).map(([key, { label }]) => (
@@ -355,9 +494,14 @@ const HomePage = () => {
         </section>
 
         <div className="flex flex-1 mt-2">
-          <CardWrapper className="w-full">{renderForm()}</CardWrapper>
+          <CardWrapper
+            className="w-full"
+            headerLabel={TAB_OPTIONS[activeTab]?.label}
+          >
+            {renderForm()}
+          </CardWrapper>
         </div>
-        <div className="w-full">{renderTable()}</div>
+        <div className="w-full pt-10">{renderTable()}</div>
       </div>
     </main>
   );

@@ -264,6 +264,7 @@ const getBankDetailsColumns = (
 
   return baseColumns;
 };
+
 interface ProposalMaster {
   _id: string;
   sector_id: string;
@@ -434,6 +435,123 @@ const getProposalColumns = (
   },
 ];
 
+type Department = {
+  _id: string;
+  department_name: string;
+  contact_person: string;
+  contact_number: string;
+  contact_email: string;
+};
+
+const getDepartmentColumns = (
+  onEdit: (row: Department) => void
+): ColumnDef<Department>[] => [
+  {
+    accessorKey: "department_name",
+    header: () => <div className="text-center">Department</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("department_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "contact_person",
+    header: () => <div className="text-center">Contact Person</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("contact_person")}</div>
+    ),
+  },
+  {
+    accessorKey: "contact_number",
+    header: () => <div className="text-center">Contact Number</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("contact_number")}</div>
+    ),
+  },
+  {
+    accessorKey: "contact_email",
+    header: () => <div className="text-center">Contact Email</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("contact_email")}</div>
+    ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }: { row: Row<Department> }) => (
+      <div className="flex justify-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(row.original)}
+          className="text-green-600 hover:text-green-800"
+        >
+          <MdEditSquare size={20} />
+        </Button>
+      </div>
+    ),
+  },
+];
+
+type ImplementationAgency = {
+  _id: string;
+  financial_year: string;
+  district_name: string;
+  block_name: string;
+  agency_name: string;
+  contact_person?: string;
+  contact_number?: string;
+  contact_email?: string;
+};
+
+const getImplementationAgencyColumns = (
+  onEdit: (row: ImplementationAgency) => void
+): ColumnDef<ImplementationAgency>[] => [
+  {
+    accessorKey: "financial_year",
+    header: () => <div className="text-center">Financial Year</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("financial_year")}</div>
+    ),
+  },
+  {
+    accessorKey: "district_name",
+    header: () => <div className="text-center">District</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("district_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "block_name",
+    header: () => <div className="text-center">Block</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("block_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "agency_name",
+    header: () => <div className="text-center">Agency Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("agency_name")}</div>
+    ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }: { row: Row<ImplementationAgency> }) => (
+      <div className="flex justify-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(row.original)}
+          className="text-green-600 hover:text-green-800"
+        >
+          <MdEditSquare size={20} />
+        </Button>
+      </div>
+    ),
+  },
+];
+
 export {
   type BudgetHead,
   budgetHeadColumns,
@@ -441,4 +559,8 @@ export {
   getBankDetailsColumns,
   type ProposalMaster,
   getProposalColumns,
+  type Department,
+  getDepartmentColumns,
+  type ImplementationAgency,
+  getImplementationAgencyColumns,
 };

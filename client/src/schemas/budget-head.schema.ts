@@ -13,6 +13,8 @@ const BudgetHeadSchema = z.object({
             message: "Allocated budget must be a non-negative number",
         }),
 
+    sanction_reference_number: z.string().min(1, "Sanctioned Referebce Number is required"),
+
     sanctioned_budget: z
         .string()
         .min(1, "Sanctioned budget is required")
@@ -20,12 +22,7 @@ const BudgetHeadSchema = z.object({
             message: "Sanctioned budget must be a non-negative number",
         }),
 
-    released_budget: z
-        .string()
-        .min(1, "Released budget is required")
-        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-            message: "Released budget must be a non-negative number",
-        }),
+    sanctioned_budget_date: z.string().min(1, "Sanctioned Date is required")
 });
 
 type BudgetHeadFormValues = z.infer<typeof BudgetHeadSchema>;

@@ -535,46 +535,46 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             }
           });
         }}
-        className="flex flex-col gap-6 w-full"
+        className="flex flex-col gap-6"
       >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col gap-5">
-            <FormField
-              control={form.control}
-              name="area_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Area Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      value={field.value}
-                      onValueChange={(val) =>
-                        form.setValue("area_type", val as "RU" | "UR", {
-                          shouldDirty: true,
-                        })
-                      }
-                      className="flex gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="RU" id="rural" />
-                        <FormLabel htmlFor="rural">Rural</FormLabel>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="UR" id="urban" />
-                        <FormLabel htmlFor="urban">Urban</FormLabel>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+        <div className="flex flex-col rounded-2xl  gap-5">
+          <FormField
+            control={form.control}
+            name="area_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Area Type</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(val) =>
+                      form.setValue("area_type", val as "RU" | "UR", {
+                        shouldDirty: true,
+                      })
+                    }
+                    className="flex gap-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="RU" id="rural" />
+                      <FormLabel htmlFor="rural">Rural</FormLabel>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="UR" id="urban" />
+                      <FormLabel htmlFor="urban">Urban</FormLabel>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
+          <div className="flex gap-5">
             <FormField
               control={form.control}
               name="recommender_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Recommender Type</FormLabel>
+                  <FormLabel>Recommended By</FormLabel>
                   <FormControl>
                     <RadioGroup
                       value={field.value}
@@ -601,9 +601,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 </FormItem>
               )}
             />
-          </div>
 
-          <div className="flex flex-col gap-5">
             <FormField
               control={form.control}
               name="recommender_name"
@@ -611,6 +609,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 <FormItem>
                   <FormLabel>MLA</FormLabel>
                   <Select
+                    disabled={recommenderType !== "MLA"}
                     onValueChange={(val) =>
                       form.setValue("recommender_name", val, {
                         shouldDirty: true,
@@ -639,8 +638,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               )}
             />
           </div>
+        </div>
 
-          <FormField
+        {/* <FormField
             control={form.control}
             name="approved_by"
             render={({ field }) => (
@@ -701,8 +701,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 </RadioGroup>
               </FormItem>
             )}
-          />
-        </div>
+          /> */}
 
         {recommenderType === "OTHER" && (
           <FormField
@@ -724,8 +723,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         )}
 
         <div className="flex items-center gap-5 w-full">
-          <div className="flex-1 flex flex-col gap-5">
-            {/* <FormField
+          {/* <FormField
               control={form.control}
               name="reference_number"
               render={({ field }) => (
@@ -738,100 +736,97 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               )}
             /> */}
 
-            <FormField
-              control={form.control}
-              name="manual_reference_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reference Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter ref no." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="manual_reference_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reference Number</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter ref no." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="recommender_contact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recommender Contact</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={10}
-                      placeholder="Enter 10-digit number"
-                      value={field.value?.toString() ?? ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        if (val.length <= 10) {
-                          field.onChange(val ? Number(val) : undefined);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="recommender_contact"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Recommender Contact</FormLabel>
+                <FormControl>
+                  <Input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Enter 10-digit number"
+                    value={field.value?.toString() ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) {
+                        field.onChange(val ? Number(val) : undefined);
+                      }
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="flex flex-1 flex-col gap-5">
-            <FormField
-              control={form.control}
-              name="proposal_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Proposal Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter proposal name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="recommender_email"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Recommender Email</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter email" type="email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="proposal_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Proposal Amount (₹)</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Enter amount"
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        field.onChange(val ? Number(val) : 0);
-                      }}
-                      value={field.value?.toString() || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="proposal_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Proposal Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter proposal name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="recommender_email"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Recommender Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter email" type="email" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="proposal_amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Proposal Amount (₹)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      field.onChange(val ? Number(val) : 0);
+                    }}
+                    value={field.value?.toString() || ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex items-center gap-5 w-full">
@@ -1264,6 +1259,103 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             }}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="approved_by"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Approved By</FormLabel>
+              <RadioGroup
+                value={field.value ?? ""}
+                onValueChange={(val) => {
+                  const typedVal = val as "DLC" | "NODAL_MINISTER" | "BOTH";
+                  form.setValue("approved_by", typedVal, {
+                    shouldDirty: true,
+                  });
+
+                  if (typedVal === "DLC") {
+                    form.setValue("approved_by_dlc", true, {
+                      shouldDirty: true,
+                    });
+                    form.setValue("approved_by_nm", false, {
+                      shouldDirty: true,
+                    });
+                  } else if (typedVal === "NODAL_MINISTER") {
+                    form.setValue("approved_by_dlc", false, {
+                      shouldDirty: true,
+                    });
+                    form.setValue("approved_by_nm", true, {
+                      shouldDirty: true,
+                    });
+                  } else if (typedVal === "BOTH") {
+                    form.setValue("approved_by_dlc", true, {
+                      shouldDirty: true,
+                    });
+                    form.setValue("approved_by_nm", true, {
+                      shouldDirty: true,
+                    });
+                  }
+                }}
+                className="flex flex-col gap-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="DLC" id="approved_dlc" />
+                  <FormLabel htmlFor="approved_dlc">DLC</FormLabel>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="NODAL_MINISTER" id="approved_nodal" />
+                  <FormLabel htmlFor="approved_nodal">Nodal Minister</FormLabel>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="BOTH" id="approved_both" />
+                  <FormLabel htmlFor="approved_both">Both</FormLabel>
+                </div>
+              </RadioGroup>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="assigned_ia"
+          render={({ field }) => (
+            <FormItem className="flex w-full">
+              <FormLabel>Implementation Agency</FormLabel>
+              <Select
+                value={field.value || ""}
+                onValueChange={(val) => {
+                  const selected = defaultIAs.find((ia) => ia._id === val);
+
+                  form.setValue("assigned_ia", selected?._id || "", {
+                    shouldDirty: true,
+                  });
+                  form.setValue(
+                    "assigned_ia_name",
+                    selected?.agency_name || "",
+                    {
+                      shouldDirty: true,
+                    }
+                  );
+                }}
+              >
+                <SelectTrigger className="w-1/2">
+                  <SelectValue placeholder="Select Agency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {defaultIAs.map((ia) => (
+                    <SelectItem key={ia._id} value={ia._id}>
+                      {ia.agency_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button
           type="submit"

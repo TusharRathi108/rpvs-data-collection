@@ -3,8 +3,9 @@ export interface CreateBudgetHeadRequest {
     district_code: string;
     district_name: string;
     allocated_budget: number;
+    sanction_reference_number: string;
     sanctioned_budget: number;
-    released_budget: number;
+    sanctioned_budget_date: string
 }
 
 export interface CreateBudgetHeadResponse {
@@ -23,6 +24,7 @@ export interface BudgetHead {
     financial_year: string;
     allocated_budget: number;
     allocated_budget_date: string;
+    sanction_reference_number: string
     sanctioned_budget: number;
     sanctioned_budget_date: string;
     released_budget: number;
