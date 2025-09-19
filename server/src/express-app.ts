@@ -15,10 +15,10 @@ import { ensureAuthenticated } from "@/middlewares/authentication";
 const expressApp: Express = express();
 
 // * initialize middlewares
+expressApp.use(corsMiddleware)
 expressApp.use(urlencoded({ extended: true }))
 expressApp.use(json())
 expressApp.use(cookieParser())
-expressApp.use(corsMiddleware)
 
 expressApp.use(
     session({

@@ -28,6 +28,8 @@ const authSlice = createSlice({
         setUser: (state, action: PayloadAction<Partial<User>>) => {
             const payload = action.payload;
 
+            console.log("LOG IN AUHT SLICE: ", payload)
+
             state.user = {
                 user_id: payload.user_id!,
                 username: payload.username!,
@@ -37,7 +39,7 @@ const authSlice = createSlice({
                 district_name: payload.district_name!,
                 state_code: "03",
                 state_name: "Punjab",
-                district: payload.district
+                district: payload.district!
             };
         },
         clearUser: (state) => {

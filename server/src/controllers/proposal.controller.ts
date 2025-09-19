@@ -247,11 +247,11 @@ const updateProposal = async (request: Request, response: Response) => {
         }
 
         console.log(proposal_id)
-        console.log(request.body)
+        console.log(request.body.data)
 
-        const result = await ProjectMasterModel.updateOne(
-            { proposal_id: proposal_id, isDeleted: false },
-            { $set: request.body }
+        const result = await ProposalMasterModel.updateOne(
+            { _id: toObjectId(proposal_id), isDeleted: false },
+            { $set: request.body.data }
         );
 
         return successHandler({

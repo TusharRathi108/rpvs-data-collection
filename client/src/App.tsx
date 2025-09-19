@@ -17,7 +17,7 @@ const App = () => {
   console.log("First Log: ", user);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/v1/auth/me", {
+    fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
       credentials: "include",
     })
       .then((res) => res.json())

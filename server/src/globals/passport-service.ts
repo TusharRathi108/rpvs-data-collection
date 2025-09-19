@@ -35,6 +35,8 @@ passport.use(
                     }).lean();
                 }
 
+                console.log("THIS IS THE DISTRICT: ", district)
+
                 const sessionUser: SessionUser = {
                     user_id: (typedUser._id as Types.ObjectId).toString(),
                     username: typedUser.username,
@@ -52,14 +54,13 @@ passport.use(
                     state_code: "03",
                     state_name: "Punjab",
                     district: district
-                        ? {
-                            district_id: district._id.toString(),
-                            district_code: district.district_code,
-                            district_name: district.district_name,
-                            state_code: district.state_code,
-                            state_name: district.state_name,
-                        }
-                        : null,
+                        ?? {
+                        district_id: district._id.toString(),
+                        district_code: district.district_code,
+                        district_name: district.district_name,
+                        state_code: district.state_code,
+                        state_name: district.state_name,
+                    }
                 };
 
                 return done(null, sessionUser);

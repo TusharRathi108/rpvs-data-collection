@@ -1,11 +1,12 @@
 //* package imports
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@reduxjs/toolkit/query/react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
-//* file imports
+//* ui components
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,11 +25,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelectWithBadges } from "./multi-select";
+
+//* schemas & types
 import {
   ProposalFormSchema,
   type ProposalFormValues,
 } from "@/schemas/proposal.schema";
+import { ProposalRecommenderType } from "@/interfaces/enums.interface";
+import type { RootState } from "@/store/store";
 
+//* api services
 import {
   useFetchBlocksQuery,
   useFetchConstituenciesQuery,
@@ -38,11 +45,6 @@ import {
   useFetchPanchayatsQuery,
   useFetchVillagesQuery,
 } from "@/store/services/location.api";
-
-import { ProposalRecommenderType } from "@/interfaces/enums.interface";
-import type { RootState } from "@/store/store";
-import { MultiSelectWithBadges } from "./multi-select";
-import { useEffect, useRef } from "react";
 import { useFetchMlasQuery } from "@/store/services/mla.api";
 import {
   useGetAllSectorsQuery,
@@ -53,6 +55,44 @@ import {
   useUpdateProposalMutation,
 } from "@/store/services/proposal.api";
 
+// ---------- constants ----------
+const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
+  district_id: "",
+  sector_id: "",
+  sector_name: "",
+  sub_sector: "",
+  recommender_name: "",
+  recommender_contact: 0,
+  recommender_email: "",
+  recommender_type: "MLA",
+  recommender_designation: "",
+  area_type: "RU",
+  old_work: false,
+  proposal_name: "",
+  proposal_amount: 0,
+  reference_number: "",
+  manual_reference_number: "",
+  permissible_work: [],
+  approved_by_dlc: false,
+  approved_by_nm: false,
+  assigned_ia: "",
+  assigned_ia_name: "",
+  location: {
+    area_type: "RU",
+    district_code: "",
+    block_code: "",
+    constituency_code: "",
+    panchayat_code: "",
+    village_id: [],
+    local_body_type_code: "",
+    local_body_code: "",
+    ward_id: [],
+    villages: [],
+    wards: [],
+  },
+};
+
+// ---------- component ----------
 type ProposalFormProps = {
   initialData?: Partial<ProposalFormValues> | null;
   onSuccess?: () => void;
@@ -74,94 +114,46 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
     },
     { _id: "68d0c5a1f6c9f0c9a3c4b113", agency_name: "Municipal Corporation" },
   ];
+  const departments = [...defaultIAs];
 
-  const departments = [
-    {
-      _id: "68d0c5a1f6c9f0c9a3c4b111",
-      agency_name: "PWD - Public Works Department",
-    },
-    {
-      _id: "68d0c5a1f6c9f0c9a3c4b112",
-      agency_name: "Rural Development Department",
-    },
-    {
-      _id: "68d0c5a1f6c9f0c9a3c4b113",
-      agency_name: "Municipal Corporation",
-    },
-  ];
-
-  const [createProposal, { isLoading: isCreating }] =
-    useCreateProposalMutation();
-  const [updateProposal, { isLoading: isUpdating }] =
-    useUpdateProposalMutation();
+  const [
+    createProposal,
+    { isLoading: isCreating, isSuccess: isCreateSuccess },
+  ] = useCreateProposalMutation();
+  const [
+    updateProposal,
+    { isLoading: isUpdating, isSuccess: isUpdateSuccess },
+  ] = useUpdateProposalMutation();
 
   const isEdit = !!initialData?._id;
+
   const previousPanchayatRef = useRef<string | undefined>(undefined);
   const previousLocalBodyRef = useRef<string | undefined>(undefined);
   const previousSectorRef = useRef<string | undefined>(undefined);
 
+  // ---------- form setup ----------
   const form = useForm<ProposalFormValues & { _id?: string }>({
     resolver: zodResolver(ProposalFormSchema),
     mode: "onChange",
     defaultValues: {
+      ...EMPTY_FORM_VALUES,
       district_id: user?.district?.district_id || "",
-      sector_id: "",
-      sector_name: "",
-      sub_sector: "",
-      recommender_name: "",
-      recommender_contact: 0,
-      recommender_email: "",
-      recommender_type: "MLA",
-      recommender_designation: "",
-      area_type: "RU",
-      old_work: false,
-      proposal_name: "",
-      proposal_amount: 0,
-      reference_number: "",
-      manual_reference_number: "",
-      permissible_work: [],
-      approved_by_dlc: false,
-      approved_by_nm: false,
-      assigned_ia: "",
-      assigned_ia_name: "",
       location: {
-        area_type: "RU",
+        ...EMPTY_FORM_VALUES.location,
         district_code: districtCode || "",
-        block_code: "",
-        constituency_code: "",
-        panchayat_code: "",
-        village_id: [],
-        local_body_type_code: "",
-        local_body_code: "",
-        ward_id: [],
-        villages: [],
-        wards: [],
       },
     },
   });
 
-  // Debug: Watch for form state changes
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (type === "change") {
-        console.log(
-          `Field ${name} changed:`,
-          value[name as keyof typeof value]
-        );
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
   const areaType = form.watch("area_type");
   const recommenderType = form.watch("recommender_type");
 
+  // ---------- queries ----------
   const { data: blocksData } = useFetchBlocksQuery(
     stateCode && districtCode
       ? { state_code: stateCode, district_code: districtCode }
       : skipToken
   );
-
   const { data: constituenciesData } = useFetchConstituenciesQuery(
     stateCode && districtCode
       ? { state_code: stateCode, district_code: districtCode }
@@ -194,8 +186,8 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
       ? { district_code: districtCode, local_body_type_code: localBodyTypeCode }
       : skipToken
   );
-  const localBodyCode = form.watch("location.local_body_code");
 
+  const localBodyCode = form.watch("location.local_body_code");
   const { data: wardsData } = useFetchLocalBodyWardsQuery(
     localBodyTypeCode && localBodyCode && districtCode
       ? {
@@ -215,120 +207,60 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
   const { data: sectorDetails } = useGetSubSectorWorksQuery(
     selectedSectorId
-      ? {
-          sector: selectedSectorId,
-          subSector: selectedSubSector || undefined,
-        }
+      ? { sector: selectedSectorId, subSector: selectedSubSector || undefined }
       : skipToken
   );
 
-  let permissibleWorksOptions: { value: string; label: string }[] = [];
-
-  if (sectorDetails?.records?.length) {
-    const record = sectorDetails.records[0];
-    const works = record.works || [];
-    permissibleWorksOptions = works.map((w: string) => ({
+  const permissibleWorksOptions =
+    sectorDetails?.records?.[0]?.works?.map((w: string) => ({
       value: w,
       label: w,
-    }));
-  }
+    })) || [];
 
-  // Initialize form with initialData
+  // ---------- effects ----------
+  // preload form for edit
   useEffect(() => {
-    if (initialData && Object.keys(initialData).length > 0) {
-      console.log("Resetting form with initialData:", initialData);
+    if (!initialData || isCreateSuccess) return;
 
-      // Compute approved_by value based on dlc and nm flags
-      let approvedByValue: "DLC" | "NODAL_MINISTER" | "BOTH" | undefined =
-        undefined;
-      if (initialData.approved_by_dlc && initialData.approved_by_nm) {
-        approvedByValue = "BOTH";
-      } else if (initialData.approved_by_dlc) {
-        approvedByValue = "DLC";
-      } else if (initialData.approved_by_nm) {
-        approvedByValue = "NODAL_MINISTER";
-      }
+    let approvedByValue: "DLC" | "NODAL_MINISTER" | "BOTH" | undefined;
+    if (initialData.approved_by_dlc && initialData.approved_by_nm)
+      approvedByValue = "BOTH";
+    else if (initialData.approved_by_dlc) approvedByValue = "DLC";
+    else if (initialData.approved_by_nm) approvedByValue = "NODAL_MINISTER";
 
-      const formData = {
-        ...initialData,
-        _id: initialData._id,
-        district_id:
-          initialData.district_id || user?.district?.district_id || "",
-        approved_by: approvedByValue,
-        recommender_contact: initialData.recommender_contact || 0,
-        proposal_amount: initialData.proposal_amount || 0,
-        assigned_ia: initialData.assigned_ia || "",
-        assigned_ia_name: initialData.assigned_ia_name || "",
-        location: {
-          area_type: initialData.area_type || "RU",
-          district_code: districtCode || "",
-          block_code: initialData.location?.block_code || "",
-          constituency_code: initialData.location?.constituency_code || "",
-          panchayat_code: initialData.location?.panchayat_code || "",
-          village_id: initialData.location?.village_id || [],
-          villages: initialData.location?.villages || [],
-          local_body_type_code:
-            initialData.location?.local_body_type_code || "",
-          local_body_code: initialData.location?.local_body_code || "",
-          ward_id: initialData.location?.ward_id || [],
-          wards: initialData.location?.wards || [],
-        },
-        permissible_work: initialData.permissible_work || [],
-      };
+    form.reset({
+      ...initialData,
+      _id: initialData._id,
+      district_id: initialData.district_id || user?.district?.district_id || "",
+      approved_by: approvedByValue,
+      location: {
+        ...initialData.location,
+        panchayat_id: initialData.location?.panchayat_id?.toString() || "",
+        panchayat_code: initialData.location?.panchayat_code?.toString() || "",
+        panchayat_name: initialData.location?.panchayat_name || "",
+        village_id:
+          initialData.location?.villages?.map((v: any) => v.village_code) || [],
+        villages: initialData.location?.villages || [],
+      },
+      permissible_work: initialData.permissible_work || [],
+    });
 
-      form.reset(formData);
+    previousPanchayatRef.current = initialData.location?.panchayat_code;
+    previousLocalBodyRef.current = initialData.location?.local_body_code;
+    previousSectorRef.current = initialData.sector_id;
+  }, [initialData, isCreateSuccess, form, user, districtCode]);
 
-      // Store initial values in refs
-      previousPanchayatRef.current = initialData.location?.panchayat_code;
-      previousLocalBodyRef.current = initialData.location?.local_body_code;
-      previousSectorRef.current = initialData.sector_id;
-    }
-  }, [initialData, user, districtCode]);
-
-  // Clear villages when panchayat changes (only on user interaction)
+  // reset after success
   useEffect(() => {
-    if (!panchayatCode) return;
-
-    if (
-      previousPanchayatRef.current !== undefined &&
-      panchayatCode !== previousPanchayatRef.current
-    ) {
-      console.log("Panchayat changed, clearing villages");
-      form.setValue("location.village_id", [], { shouldDirty: true });
-      form.setValue("location.villages", [], { shouldDirty: true });
+    if (isCreateSuccess) {
+      form.reset(EMPTY_FORM_VALUES);
+      onSuccess?.();
     }
-    previousPanchayatRef.current = panchayatCode;
-  }, [panchayatCode, form]);
-
-  // Clear wards when local body changes (only on user interaction)
-  useEffect(() => {
-    if (!localBodyCode) return;
-
-    if (
-      previousLocalBodyRef.current !== undefined &&
-      localBodyCode !== previousLocalBodyRef.current
-    ) {
-      console.log("Local body changed, clearing wards");
-      form.setValue("location.ward_id", [], { shouldDirty: true });
-      form.setValue("location.wards", [], { shouldDirty: true });
+    if (isUpdateSuccess && initialData) {
+      form.reset(initialData as any);
+      onSuccess?.();
     }
-    previousLocalBodyRef.current = localBodyCode;
-  }, [localBodyCode, form]);
-
-  // Clear sub-sector and permissible works when sector changes
-  useEffect(() => {
-    if (!selectedSectorId) return;
-
-    if (
-      previousSectorRef.current !== undefined &&
-      selectedSectorId !== previousSectorRef.current
-    ) {
-      console.log("Sector changed, clearing sub-sector and works");
-      form.setValue("sub_sector", "", { shouldDirty: true });
-      form.setValue("permissible_work", [], { shouldDirty: true });
-    }
-    previousSectorRef.current = selectedSectorId;
-  }, [selectedSectorId, form]);
+  }, [isCreateSuccess, isUpdateSuccess, form, onSuccess, initialData]);
 
   const onSubmit = async (values: ProposalFormValues) => {
     console.log("✅ onSubmit function called with values:", values);
@@ -406,7 +338,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 district_code: user?.district_code || "",
                 district_name: user?.district_name || "",
 
-                // ✅ constituency full info
                 constituency_id:
                   constituency?._id || "000000000000000000000000",
                 constituency_code: constituency?.constituency_code || "",
@@ -505,12 +436,61 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         toast.success(result.message || "✅ Proposal created successfully");
       }
 
+      form.reset();
       onSuccess?.();
     } catch (err: any) {
       console.error("❌ Failed to create/update proposal:", err);
       toast.error(err?.data?.message || "Failed to save proposal");
+    } finally {
+      form.reset();
     }
   };
+
+  useEffect(() => {
+    if (isCreateSuccess) {
+      // clear the form after a successful create
+      form.reset({
+        district_id: "",
+        sector_id: "",
+        sector_name: "",
+        sub_sector: "",
+        recommender_name: "",
+        recommender_contact: 0,
+        recommender_email: "",
+        recommender_type: "MLA",
+        recommender_designation: "",
+        area_type: "RU",
+        old_work: false,
+        proposal_name: "",
+        proposal_amount: 0,
+        reference_number: "",
+        manual_reference_number: "",
+        permissible_work: [],
+        approved_by_dlc: false,
+        approved_by_nm: false,
+        assigned_ia: "",
+        assigned_ia_name: "",
+        location: {
+          area_type: "RU",
+          district_code: "",
+          block_code: "",
+          constituency_code: "",
+          panchayat_code: "",
+          village_id: [],
+          local_body_type_code: "",
+          local_body_code: "",
+          ward_id: [],
+          villages: [],
+          wards: [],
+        },
+      });
+    }
+
+    if (isUpdateSuccess) {
+      // optional: either clear or just keep values
+      // form.reset(); // if you want to clear also on update
+    }
+  }, [isCreateSuccess, isUpdateSuccess, form]);
 
   return (
     <Form {...form}>
@@ -582,7 +562,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         form.setValue(
                           "recommender_type",
                           val as ProposalRecommenderType,
-                          { shouldDirty: true }
+                          {
+                            shouldDirty: true,
+                          }
                         )
                       }
                       className="flex gap-6"
@@ -602,41 +584,79 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="recommender_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>MLA</FormLabel>
-                  <Select
-                    disabled={recommenderType !== "MLA"}
-                    onValueChange={(val) =>
-                      form.setValue("recommender_name", val, {
-                        shouldDirty: true,
-                      })
-                    }
-                    value={field.value || ""}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select MLA" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mlasLoading ? (
-                        <SelectItem value="__loading" disabled>
-                          Loading MLAs...
-                        </SelectItem>
-                      ) : (
-                        mlasData?.records?.map((mla: any) => (
-                          <SelectItem key={mla._id} value={mla.mla_name}>
-                            {mla.mla_name} — {mla.constituency_name}
+            {recommenderType === "MLA" && (
+              <FormField
+                control={form.control}
+                name="recommender_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>MLA</FormLabel>
+                    <Select
+                      onValueChange={(val) =>
+                        form.setValue("recommender_name", val, {
+                          shouldDirty: true,
+                        })
+                      }
+                      value={field.value || ""}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select MLA" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mlasLoading ? (
+                          <SelectItem value="__loading" disabled>
+                            Loading MLAs...
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+                        ) : (
+                          mlasData?.records?.map((mla: any) => (
+                            <SelectItem key={mla._id} value={mla.mla_name}>
+                              {mla.mla_name} — {mla.constituency_name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {recommenderType === "OTHER" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="recommender_designation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Other Recommender</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter type (e.g. NGO, Citizen)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recommender_name"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Recommender Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter recommender name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -703,7 +723,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             )}
           /> */}
 
-        {recommenderType === "OTHER" && (
+        {/* {recommenderType === "OTHER" && (
           <FormField
             control={form.control}
             name="recommender_designation"
@@ -720,7 +740,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               </FormItem>
             )}
           />
-        )}
+        )} */}
 
         <div className="flex items-center gap-5 w-full">
           {/* <FormField
@@ -899,13 +919,13 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               <>
                 <FormField
                   control={form.control}
-                  name="location.panchayat_code"
+                  name="location.panchayat_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Panchayat</FormLabel>
                       <Select
                         onValueChange={(val) =>
-                          form.setValue("location.panchayat_code", val, {
+                          form.setValue("location.panchayat_id", val, {
                             shouldDirty: true,
                           })
                         }
@@ -915,14 +935,23 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                           <SelectValue placeholder="Select Panchayat" />
                         </SelectTrigger>
                         <SelectContent>
-                          {panchayatsData?.records?.map((p: any) => (
-                            <SelectItem
-                              key={p.panchayat_code}
-                              value={p.panchayat_code}
-                            >
-                              {p.panchayat_name}
-                            </SelectItem>
-                          ))}
+                          {/* ✅ use API if loaded */}
+                          {panchayatsData?.records?.length
+                            ? panchayatsData.records.map((p: any) => (
+                                <SelectItem key={p._id} value={p._id}>
+                                  {p.panchayat_name}
+                                </SelectItem>
+                              ))
+                            : /* ✅ fallback to initialData */
+                              initialData?.location?.panchayat_id && (
+                                <SelectItem
+                                  key={initialData.location.panchayat_id}
+                                  value={initialData.location.panchayat_id}
+                                >
+                                  {initialData.location.panchayat_name ||
+                                    "Unknown Panchayat"}
+                                </SelectItem>
+                              )}
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -932,27 +961,35 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 <FormField
                   control={form.control}
                   name="location.village_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Villages</FormLabel>
-                      <MultiSelectWithBadges
-                        options={
-                          villagesData?.records?.map((v: any) => ({
-                            value: v.village_code,
-                            label: v.village_name,
-                          })) || []
-                        }
-                        values={field.value || []}
-                        onChange={(vals) =>
-                          form.setValue("location.village_id", vals, {
-                            shouldDirty: true,
-                          })
-                        }
-                        placeholder="Select Villages"
-                        badgeColor="bg-blue-500"
-                      />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const options =
+                      villagesData?.records?.map((v: any) => ({
+                        value: v.village_code,
+                        label: v.village_name,
+                      })) ||
+                      initialData?.location?.villages?.map((v: any) => ({
+                        value: v.village_code,
+                        label: v.village_name,
+                      })) ||
+                      [];
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Villages</FormLabel>
+                        <MultiSelectWithBadges
+                          options={options}
+                          values={field.value || []}
+                          onChange={(vals) =>
+                            form.setValue("location.village_id", vals, {
+                              shouldDirty: true,
+                            })
+                          }
+                          placeholder="Select Villages"
+                          badgeColor="bg-blue-500"
+                        />
+                      </FormItem>
+                    );
+                  }}
                 />
               </>
             )}
@@ -1081,6 +1118,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         }
                         placeholder="Select Wards"
                         badgeColor="bg-purple-500"
+                        badgeClassName="w-[70px]"
                       />
                     </FormItem>
                   )}
@@ -1153,7 +1191,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   }}
                   value={field.value || ""}
                 >
-                  <SelectTrigger className="">
+                  <SelectTrigger className="w-[200px] truncate">
                     <SelectValue placeholder="Select Sector" />
                   </SelectTrigger>
                   <SelectContent>
