@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --destructive-foreground: hsl(0, 62.8%, 30.6%);
+}
+
+.bg-multi-ellipse {
+  background: radial-gradient(
+    ellipse at top,
+    #ff7f50,
+    /* coral */ #ffefd5,
+    /* papayawhip */ #87cefa,
+    /* light sky blue */ #4682b4 /* steel blue */
+  );
+}
+
+.bg-stacked-ellipse {
+  background: radial-gradient(
+        ellipse 100% 60% at top,
+        #ff0080,
+        #ff00ff 30%,
+        #00ffff 60%,
+        #00ff00 90%
+      )
+      radial-gradient(
+        ellipse at bottom right,
+        rgba(200, 200, 255, 0.5),
+        transparent 60%
+      ),
+    radial-gradient(ellipse at center, #009dff, #01b5a6);
+}

@@ -1,0 +1,57 @@
+import { z } from "zod";
+import { zObjectId } from "@/utils/utility-functions";
+
+const getBankHeadBaseSchema = (role_name: string) =>
+    z.object({
+        district_id: zObjectId,
+        district_code: z.string().trim().min(1),
+        district_name: z.string().trim().min(1),
+
+        agency_code:
+            role_name === "DLC"
+                ? z.string().trim().min(1, "Agency code is required")
+                : z.string().trim().optional(),
+        agency_name:
+            role_name === "DLC"
+                ? z.string().trim().min(1, "Agency name is required")
+                : z.string().trim().optional(),
+
+        bank_name: z.string().trim().min(1),
+        account_number: z
+            .string()
+            .trim()
+            .min(6, "Account number must have at least 6 digits")
+            .regex(/^[0-9]+$/, "Account number must be numeric"),
+        ifsc_code: z
+            .string()
+            .trim()
+            .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code format"),
+        branch_name: z.string().trim().min(1),
+        branch_code: z.string().trim().min(1),
+
+        isDeleted: z.boolean().default(false),
+    });
+
+const createBankHeadSchema = (role_name: string) =>
+    getBankHeadBaseSchema(role_name);
+
+const updateBankHeadSchema = (role_name: string) =>
+    getBankHeadBaseSchema(role_name);
+
+const partialUpdateBankHeadSchema = (role_name: string) =>
+    getBankHeadBaseSchema(role_name).partial();
+
+type CreateBankHeadDto = z.infer<ReturnType<typeof createBankHeadSchema>>;
+type UpdateBankHeadDto = z.infer<ReturnType<typeof updateBankHeadSchema>>;
+type PartialUpdateBankHeadDto = z.infer<
+    ReturnType<typeof partialUpdateBankHeadSchema>
+>;
+
+export {
+    createBankHeadSchema,
+    updateBankHeadSchema,
+    partialUpdateBankHeadSchema,
+    type CreateBankHeadDto,
+    type UpdateBankHeadDto,
+    type PartialUpdateBankHeadDto,
+};

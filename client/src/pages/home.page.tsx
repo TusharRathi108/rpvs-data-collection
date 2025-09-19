@@ -1,0 +1,366 @@
+//* package imports
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+
+//* file imports
+import { type RootState } from "@/store/store";
+import { clearUser } from "@/store/slices/auth-slice";
+import { useLogoutMutation } from "@/store/services/auth.api";
+import { useFetchDistrictsQuery } from "@/store/services/location.api";
+import { useGetAllBankHeadsQuery } from "@/store/services/bank-head.api";
+import { useGetAllBudgetHeadsQuery } from "@/store/services/budget-head.api";
+
+import BankMasterForm from "@/components/mini-components/bank-form";
+import BudgetHeadForm from "@/components/mini-components/budget-form";
+import CardWrapper from "@/components/card-wrapper";
+import { DataTable } from "@/components/data-table/data-table";
+import {
+  budgetHeadColumns,
+  getBankDetailsColumns,
+  type BudgetHead,
+  type BankDetails,
+  type ProposalMaster,
+  getProposalColumns,
+} from "@/components/data-table/columns";
+import PageLoader from "@/components/mini-components/page-loader";
+import ProposalForm from "@/components/mini-components/proposal-form";
+import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
+
+const getTabOptions = (roleName?: string) => {
+  if (roleName === "District") {
+    return {
+      "proposal-master": {
+        label: "PROPOSAL MASTER",
+        form: ProposalForm,
+        searchKey: "proposal_name",
+      },
+      "bank-master": {
+        label: "BANK MASTER",
+        form: BankMasterForm,
+        searchKey: "bank_name",
+      },
+    } as const;
+  }
+
+  return {
+    "budget-master": {
+      label: "BUDGET MASTER",
+      form: BudgetHeadForm,
+      searchKey: "district_name",
+    },
+    "bank-master": {
+      label: "BANK MASTER",
+      form: BankMasterForm,
+      searchKey: "bank_name",
+    },
+  } as const;
+};
+
+const HomePage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const TAB_OPTIONS = useMemo(() => getTabOptions(user?.role_name), [user]);
+
+  // table states
+  const [budgetTableData, setBudgetTableData] = useState<BudgetHead[]>([]);
+  const [bankTableData, setBankTableData] = useState<BankDetails[]>([]);
+  const [proposalTableData, setProposalTableData] = useState<ProposalMaster[]>(
+    []
+  );
+
+  // selected row states
+  const [selectedBankHead, setSelectedBankHead] = useState<BankDetails | null>(
+    null
+  );
+  const [selectedBudgetHead, setSelectedBudgetHead] =
+    useState<BudgetHead | null>(null);
+  const [selectedProposal, setSelectedProposal] =
+    useState<ProposalMaster | null>(null);
+
+  const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
+    Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
+  );
+
+  const handleEditBankHead = (row: BankDetails) => setSelectedBankHead(row);
+  const handleEditBudgetHead = (row: BudgetHead) => setSelectedBudgetHead(row);
+  const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
+
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+
+  const { data: districtsData, isLoading: districtsLoading } =
+    useFetchDistrictsQuery(user?.state_code ?? "", { skip: !user?.state_code });
+
+  const {
+    data: budgetHeadsData,
+    isLoading: budgetHeadsLoading,
+    error: budgetHeadsError,
+  } = useGetAllBudgetHeadsQuery();
+
+  const {
+    data: bankHeadsData,
+    isLoading: bankHeadsLoading,
+    error: bankHeadsError,
+  } = useGetAllBankHeadsQuery();
+
+  const {
+    data: proposalsData,
+    isLoading: proposalsLoading,
+    error: proposalsError,
+  } = useGetAllProposalsQuery();
+
+  const districts = districtsData?.records || [];
+
+  //? Normalize Budget Heads
+  const processedBudgetHeads: BudgetHead[] = useMemo(
+    () =>
+      (budgetHeadsData?.records || []).map((h) => ({
+        ...h,
+        sanction_number: h.sanction_number ?? "N/A",
+        allocated_budget_date:
+          h.allocated_budget_date ?? new Date().toISOString(),
+        sanctioned_budget_date:
+          h.sanctioned_budget_date ?? new Date().toISOString(),
+        release_budget_date: h.release_budget_date ?? new Date().toISOString(),
+      })),
+    [budgetHeadsData]
+  );
+
+  //? Normalize Bank Heads
+  const processedBankHeads: BankDetails[] = useMemo(
+    () => bankHeadsData?.records || [],
+    [bankHeadsData]
+  );
+
+  //? Normalize Proposals
+  const processedProposals: ProposalMaster[] = useMemo(
+    () =>
+      (proposalsData?.records || []).map((p: any) => ({
+        ...p,
+        recommender_type: p.recommender_type === "MLA" ? "MLA" : "OTHER",
+      })),
+    [proposalsData]
+  );
+
+  //* Sync tableData
+  useEffect(() => {
+    if (activeTab === "budget-master") {
+      setBudgetTableData(processedBudgetHeads);
+    } else if (activeTab === "bank-master") {
+      setBankTableData(processedBankHeads);
+    } else if (activeTab === "proposal-master") {
+      setProposalTableData(processedProposals);
+    }
+  }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
+
+  //! Error handling
+  useEffect(() => {
+    if (budgetHeadsError) {
+      toast.error("Failed to fetch budget head data");
+      console.error("Budget head API error:", budgetHeadsError);
+    }
+    if (bankHeadsError) {
+      toast.error("Failed to fetch bank head data");
+      console.error("Bank head API error:", bankHeadsError);
+    }
+    if (proposalsError) {
+      toast.error("Failed to fetch proposal data");
+      console.error("Proposal API error:", proposalsError);
+    }
+  }, [budgetHeadsError, bankHeadsError, proposalsError]);
+
+  //* Logout
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+      dispatch(clearUser());
+      toast.success("Logged out successfully");
+      navigate("/", { replace: true });
+    } catch {
+      toast.error("Logout failed");
+    }
+  };
+
+  //? Render helpers
+  const renderForm = () => {
+    if (activeTab === "budget-master") {
+      return (
+        <BudgetHeadForm
+          districts={districts}
+          isLoading={districtsLoading}
+          initialData={selectedBudgetHead}
+          onSuccess={() => setSelectedBudgetHead(null)}
+        />
+      );
+    }
+
+    if (activeTab === "bank-master") {
+      const bankFormData = selectedBankHead ? { ...selectedBankHead } : null;
+      return (
+        <BankMasterForm
+          districts={districts}
+          isLoading={districtsLoading}
+          initialData={bankFormData}
+          onSuccess={() => setSelectedBankHead(null)}
+        />
+      );
+    }
+
+    if (activeTab === "proposal-master") {
+      return (
+        <ProposalForm
+          initialData={
+            selectedProposal
+              ? {
+                  ...selectedProposal,
+                  recommender_type:
+                    selectedProposal.recommender_type === "MLA"
+                      ? "MLA"
+                      : "OTHER",
+                  area_type: selectedProposal.area_type === "RU" ? "RU" : "UR",
+
+                  // ✅ Full LocationSchema mapping
+                  location: {
+                    area_type:
+                      selectedProposal.area_type === "RU" ? "RU" : "UR",
+                    district_id: selectedProposal.location?.district_id ?? "",
+                    block_id: selectedProposal.location?.block_id ?? "",
+                    constituency_id:
+                      selectedProposal.location?.constituency_id ?? "",
+                    local_body_id:
+                      selectedProposal.location?.local_body_id ?? "",
+                    panchayat_id: selectedProposal.location?.panchayat_id ?? "",
+                    ward_id: selectedProposal.location?.ward_id ?? [],
+                    village_id: selectedProposal.location?.village_id ?? [],
+
+                    state_code: selectedProposal.location?.state_code ?? "",
+                    state_name: selectedProposal.location?.state_name ?? "",
+                    district_code:
+                      selectedProposal.location?.district_code ?? "",
+                    district_name:
+                      selectedProposal.location?.district_name ?? "",
+                    block_code: selectedProposal.location?.block_code ?? "",
+                    block_name: selectedProposal.location?.block_name ?? "",
+                    constituency_code:
+                      selectedProposal.location?.constituency_code ?? "",
+                    constituency_name:
+                      selectedProposal.location?.constituency_name ?? "",
+
+                    local_body_type_code:
+                      selectedProposal.location?.local_body_type_code ?? "",
+                    local_body_type_name:
+                      selectedProposal.location?.local_body_type_name ?? "",
+                    local_body_code:
+                      selectedProposal.location?.local_body_code ?? "",
+                    local_body_name:
+                      selectedProposal.location?.local_body_name ?? undefined,
+
+                    panchayat_code:
+                      selectedProposal.location?.panchayat_code ?? "",
+                    panchayat_name:
+                      selectedProposal.location?.panchayat_name ?? "",
+
+                    // ✅ required arrays
+                    villages: selectedProposal.location?.villages ?? [],
+                    wards: selectedProposal.location?.wards ?? [],
+                  },
+                }
+              : null
+          }
+          onSuccess={() => setSelectedProposal(null)}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const renderTable = () => {
+    if (activeTab === "budget-master") {
+      if (budgetHeadsLoading || districtsLoading) return <PageLoader />;
+      return (
+        <DataTable
+          columns={budgetHeadColumns((row) => handleEditBudgetHead(row))}
+          data={budgetTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
+    if (activeTab === "bank-master") {
+      if (bankHeadsLoading) return <PageLoader />;
+      return (
+        <DataTable
+          columns={getBankDetailsColumns(user?.role_name || "", (row) =>
+            handleEditBankHead(row)
+          )}
+          data={bankTableData}
+          searchKey={TAB_OPTIONS[activeTab].searchKey}
+          showPagination
+        />
+      );
+    }
+
+    if (activeTab === "proposal-master") {
+      if (proposalsLoading) return <PageLoader />;
+      return (
+        <DataTable
+          columns={getProposalColumns((row) => handleEditProposal(row))}
+          data={proposalTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <main className="p-2 flex flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
+      <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
+        <h1 className="text-2xl drop-shadow-2xl">
+          📜 Rangla Punjab Vikas Scheme
+        </h1>
+        <button
+          className="bg-red-500/90 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? "Logging out..." : "Logout"}
+        </button>
+      </nav>
+
+      <div className="flex flex-col items-center gap-2 w-full">
+        <section className="flex flex-col w-2/6">
+          <div className="flex flex-col gap-5 card backdrop-blur-md overflow-hidden">
+            <div className="flex p-2 gap-2 bg-white/50 rounded-2xl">
+              {Object.entries(TAB_OPTIONS).map(([key, { label }]) => (
+                <button
+                  key={key}
+                  className={`tab-button focus-visible:outline-none rounded-xl text-black flex-1 py-4 text-center font-medium transition-all ${
+                    activeTab === key ? "bg-white" : "hover:bg-white/10"
+                  }`}
+                  onClick={() => setActiveTab(key as keyof typeof TAB_OPTIONS)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="flex flex-1 mt-2">
+          <CardWrapper className="w-full">{renderForm()}</CardWrapper>
+        </div>
+        <div className="w-full">{renderTable()}</div>
+      </div>
+    </main>
+  );
+};
+
+export default HomePage;

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig.json",
+  "compilerOptions": {
+    /* File Layout */
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+
+    /* Module & Resolution */
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ESNext",
+
+    /* Environment Settings */
+    "types": ["node", "express"],
+    "lib": ["ESNext"],
+
+    /* Interop & Loading */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    /* Outputs */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    /* Strictness & Safety */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Optional Path Aliases */
+    "paths": {
+      "@/*": ["src/*"] // "@" points to the "src" folder
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
