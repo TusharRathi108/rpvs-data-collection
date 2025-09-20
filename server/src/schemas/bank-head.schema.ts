@@ -4,8 +4,10 @@ import { zObjectId } from "@/utils/utility-functions";
 const getBankHeadBaseSchema = (role_name: string) =>
     z.object({
         district_id: zObjectId,
-        district_code: z.string().trim().min(1),
-        district_name: z.string().trim().min(1),
+        district_code: z.string().trim().min(1, "District code is required"),
+        district_name: z.string().trim().min(1, "District name is required"),
+
+        rbo: z.string().trim().min(1, "RBO is required"),
 
         agency_code:
             role_name === "DLC"
@@ -16,7 +18,7 @@ const getBankHeadBaseSchema = (role_name: string) =>
                 ? z.string().trim().min(1, "Agency name is required")
                 : z.string().trim().optional(),
 
-        bank_name: z.string().trim().min(1),
+        bank_name: z.string().trim().min(1, "Bank name is required"),
         account_number: z
             .string()
             .trim()
@@ -26,10 +28,16 @@ const getBankHeadBaseSchema = (role_name: string) =>
             .string()
             .trim()
             .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code format"),
-        branch_name: z.string().trim().min(1),
-        branch_code: z.string().trim().min(1),
+        branch_name: z.string().trim().min(1, "Branch name is required"),
+        branch_code: z.string().trim().min(1, "Branch code is required"),
 
-        isDeleted: z.boolean().default(false),
+        branch_manager_name: z.string().trim().min(1, "Branch manager is required"),
+        contact_number: z
+            .string()
+            .trim()
+            .regex(/^[0-9]{10}$/, "Contact number must be 10 digits"),
+
+        remarks: z.string().trim().optional(),
     });
 
 const createBankHeadSchema = (role_name: string) =>

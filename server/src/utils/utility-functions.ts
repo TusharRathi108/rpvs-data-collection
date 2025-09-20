@@ -62,10 +62,6 @@ export const rejectFields = <T extends ZodRawShape>(
         });
     });
 
-/**
- * Generate financial year in either full ("2025-2026") or short ("25-26") format.
- * @param format "full" (default) | "short"
- */
 export function calculateFinancialYear(format: "full" | "short" = "full"): string {
     const date = new Date();
     const year = date.getFullYear();
@@ -78,7 +74,7 @@ export function calculateFinancialYear(format: "full" | "short" = "full"): strin
         return `${startYear.toString().slice(-2)}-${endYear.toString().slice(-2)}`;
     }
 
-    return `${startYear}-${endYear}`;
+    return `${startYear}-${endYear.toString().slice(-2)}`;
 }
 
 export function normalizeSort<Order extends Record<string, SortOrder>>(

@@ -1,15 +1,15 @@
 //* package imports
-import { model, Schema, Document } from "mongoose";
+import { model, Schema, Document, Types } from "mongoose";
 
 //* file imports
-import { IBankHead } from "@/interfaces/bank.interface";
+import { IBank } from "@/interfaces/bank.interface";
 
-interface BankHeadDocument extends IBankHead, Document { }
+interface BankMasterDocument extends IBank, Document { }
 
-const bankHeadSchema = new Schema<BankHeadDocument>(
+const bankMasterSchema = new Schema<BankMasterDocument>(
     {
         district_id: {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "district",
             required: true,
         },
@@ -25,34 +25,17 @@ const bankHeadSchema = new Schema<BankHeadDocument>(
             trim: true,
         },
 
-        agency_code: {
-            type: String,
-            trim: true,
-            default: null
-        },
-        agency_name: {
-            type: String,
-            trim: true,
-            default: null
-        },
-
-        bank_name: {
+        rbo: {
             type: String,
             required: true,
             trim: true,
-        },
-        account_number: {
-            type: String,
-            required: true,
-            trim: true,
-            unique: true,
         },
         ifsc_code: {
             type: String,
             required: true,
             trim: true,
         },
-        branch_name: {
+        bank_name: {
             type: String,
             required: true,
             trim: true,
@@ -62,22 +45,63 @@ const bankHeadSchema = new Schema<BankHeadDocument>(
             required: true,
             trim: true,
         },
+        branch_name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        branch_manager_name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        contact_number: {
+            type: Number,
+            required: true,
+            validate: {
+                validator: (v: number) => /^[0-9]{10}$/.test(String(v)),
+                message: "Contact number must be a 10-digit number",
+            },
+        },
+        remarks: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
+        agency_code: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+        agency_name: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
+        account_number: {
+            type: String,
+            required: true,
+            trim: true,
+            unique: true,
+        },
 
         isDeleted: {
             type: Boolean,
             default: false,
         },
         createdBy: {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "users",
             required: true,
         },
         updatedBy: {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "users",
         },
         lastActionTakenBy: {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "users",
         },
     },
@@ -86,11 +110,11 @@ const bankHeadSchema = new Schema<BankHeadDocument>(
     }
 );
 
-bankHeadSchema.index(
-    { account_number: 1 },
-    { unique: true }
+bankMasterSchema.index({ district_id: 1, account_number: 1 }, { unique: true });
+
+const BankMasterModel = model<BankMasterDocument>(
+    "bank_master",
+    bankMasterSchema
 );
 
-const BankHeadModel = model<BankHeadDocument>("bank_head", bankHeadSchema);
-
-export { BankHeadDocument, BankHeadModel };
+export { BankMasterDocument, BankMasterModel };

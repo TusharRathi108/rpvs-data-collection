@@ -6,7 +6,7 @@ import { Request, Response } from "express"
 import { env } from "@/configs/env";
 import { SessionUser } from "@/types/session-user";
 import { toObjectId } from "@/utils/utility-functions";
-import { BankHeadModel } from "@/models/bank-head.model";
+import { BankMasterModel } from "@/models/bank-head.model";
 import { ExceptionType, throwHttpException } from "@/utils/http-exception";
 import { handleError, successHandler } from "@/globals/response-handler.helper"
 import { CreateBankHeadDto, createBankHeadSchema, UpdateBankHeadDto, updateBankHeadSchema } from "@/schemas/bank-head.schema";
@@ -25,7 +25,7 @@ const createBankHead = async (request: Request, response: Response) => {
             lastActionTakenBy: toObjectId(user?.user_id),
         };
 
-        const result = await BankHeadModel.create(payloadWithAudit);
+        const result = await BankMasterModel.create(payloadWithAudit);
 
         return successHandler({
             response,
@@ -42,50 +42,43 @@ const createBankHead = async (request: Request, response: Response) => {
 
 const fetchBankDetails = async (request: Request, response: Response) => {
     try {
-        const user = request.user as SessionUser
+        const user = request.user as SessionUser;
+
+        const baseProject = {
+            _id: 1,
+            district_id: 1,
+            district_code: 1,
+            district_name: 1,
+            bank_name: 1,
+            account_number: 1,
+            ifsc_code: 1,
+            branch_name: 1,
+            branch_code: 1,
+            rbo: 1,
+            branch_manager_name: 1,
+            contact_number: 1,
+            remarks: 1,
+            createdAt: 1,
+            updatedAt: 1,
+        };
+
         const pipeline: any[] = [
             {
                 $match: { isDeleted: false },
             },
+            {
+                $project:
+                    user.role_name === "PLANNING"
+                        ? baseProject
+                        : {
+                            ...baseProject,
+                            agency_code: 1,
+                            agency_name: 1,
+                        },
+            },
         ];
 
-        if (user.role_name === "PLANNING") {
-            pipeline.push({
-                $project: {
-                    _id: 1,
-                    district_id: 1,
-                    district_code: 1,
-                    district_name: 1,
-                    bank_name: 1,
-                    account_number: 1,
-                    ifsc_code: 1,
-                    branch_name: 1,
-                    branch_code: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                },
-            });
-        } else {
-            pipeline.push({
-                $project: {
-                    _id: 1,
-                    district_id: 1,
-                    district_code: 1,
-                    district_name: 1,
-                    agency_code: 1,
-                    agency_name: 1,
-                    bank_name: 1,
-                    account_number: 1,
-                    ifsc_code: 1,
-                    branch_name: 1,
-                    branch_code: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                },
-            });
-        }
-
-        const result = await BankHeadModel.aggregate(pipeline);
+        const result = await BankMasterModel.aggregate(pipeline);
 
         return successHandler({
             response,
@@ -98,7 +91,7 @@ const fetchBankDetails = async (request: Request, response: Response) => {
         console.error("Error: ", error);
         return handleError(error, response);
     }
-}
+};
 
 const fetchAgencyBankDetails = async (request: Request, response: Response) => {
     try {
@@ -158,7 +151,7 @@ const fetchAgencyBankDetails = async (request: Request, response: Response) => {
             });
         }
 
-        const result = await BankHeadModel.aggregate(pipeline);
+        const result = await BankMasterModel.aggregate(pipeline);
 
         return successHandler({
             response,
@@ -176,29 +169,20 @@ const fetchAgencyBankDetails = async (request: Request, response: Response) => {
 const updateBankHead = async (request: Request, response: Response) => {
     try {
         const user = request.user as SessionUser;
-        const { bank_head_id } = request.params;
+        const { bank_head_id } = request.params as { bank_head_id: string }
 
         if (!bank_head_id) {
             throwHttpException(ExceptionType.BadRequest, "Bank Head ID is required");
         }
 
-        let objectId;
-        try {
-            objectId = toObjectId(bank_head_id);
-        } catch {
-            throwHttpException(ExceptionType.BadRequest, "Invalid Bank Head ID");
-        }
-
         const role_name = user?.role_name ?? "";
 
-        // ✅ Validate with role-aware schema
         const parsedPayload: UpdateBankHeadDto = updateBankHeadSchema(role_name).parse(
             request.body
         );
 
-        // ✅ Check if record exists
-        const existing = await BankHeadModel.findOne({
-            _id: objectId,
+        const existing = await BankMasterModel.findOne({
+            _id: toObjectId(bank_head_id),
             isDeleted: false,
         });
 
@@ -206,16 +190,14 @@ const updateBankHead = async (request: Request, response: Response) => {
             throwHttpException(ExceptionType.NotFound, "Bank Head not found");
         }
 
-        // ✅ Merge audit info
         const payloadWithAudit = {
             ...parsedPayload,
             updatedBy: toObjectId(user?.user_id),
             lastActionTakenBy: toObjectId(user?.user_id),
         };
 
-        // ✅ Update and return new doc
-        const result = await BankHeadModel.findByIdAndUpdate(
-            objectId,
+        const result = await BankMasterModel.findByIdAndUpdate(
+            { _id: bank_head_id },
             { $set: payloadWithAudit },
             { new: true }
         );

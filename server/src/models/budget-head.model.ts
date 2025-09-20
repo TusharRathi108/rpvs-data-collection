@@ -43,14 +43,11 @@ const budgetHeadSchema = new Schema<BudgetHeadDocument>(
         sanctioned_budget: { type: Schema.Types.Double, default: 0 },
         sanctioned_budget_date: { type: Date },
 
-        released_budget: { type: Types.Double, ref: "fund_releases" },
-        release_budget_date: { type: Date },
+        isDeleted: { type: Boolean, default: false },
 
-        isActive: { type: Boolean, default: true },
-
-        createdBy: { type: Schema.ObjectId, ref: "users", required: true },
-        updatedBy: { type: Schema.ObjectId, ref: "users", default: null },
-        lastActionTakenBy: { type: Schema.ObjectId, ref: "users", default: null },
+        createdBy: { type: Schema.ObjectId, ref: "user", required: true },
+        updatedBy: { type: Schema.ObjectId, ref: "user", default: null },
+        lastActionTakenBy: { type: Schema.ObjectId, ref: "user", default: null },
     },
     {
         timestamps: true,
@@ -77,7 +74,7 @@ budgetHeadSchema.pre<BudgetHeadDocument>("save", async function (next) {
         return next(new Error("District code and financial year are required."));
     }
 
-    // 🔍 Fetch all existing records for same district + FY
+    // Fetch all existing records for same district + FY
     const existingRecords = await (this.constructor as typeof BudgetHeadModel).find({
         district_code: districtCode,
         financial_year: financialYear,
@@ -87,9 +84,9 @@ budgetHeadSchema.pre<BudgetHeadDocument>("save", async function (next) {
 
     if (this.isNew) {
         if (hasPrevious) {
-            const firstRecord = existingRecords[0]; // Assume oldest one is correct
+            const firstRecord = existingRecords[0];
 
-            // ✅ Allocated budget must be same as existing
+            // Allocated budget must be same as existing
             const existing = firstRecord?.allocated_budget?.valueOf() ?? 0;
             const current = this.allocated_budget?.valueOf();
 
@@ -101,7 +98,7 @@ budgetHeadSchema.pre<BudgetHeadDocument>("save", async function (next) {
                 );
             }
 
-            // ✅ Sanctioned budget cumulative check
+            // Sanctioned budget cumulative check
             const totalSanctionedSoFar = existingRecords.reduce((sum, r) => {
                 return sum + (r.sanctioned_budget?.valueOf?.() ?? 0);
             }, 0);
@@ -127,24 +124,24 @@ budgetHeadSchema.pre<BudgetHeadDocument>("save", async function (next) {
             }
         }
 
-        // 🔢 Generate sanction number
-        let runningNumber = 1;
-        const lastRecord = await (this.constructor as typeof BudgetHeadModel)
-            .findOne({ district_code: districtCode, financial_year: financialYear })
-            .sort({ createdAt: -1 })
-            .lean();
+        // Generate sanction number
+        // let runningNumber = 1;
+        // const lastRecord = await (this.constructor as typeof BudgetHeadModel)
+        //     .findOne({ district_code: districtCode, financial_year: financialYear })
+        //     .sort({ createdAt: -1 })
+        //     .lean();
 
-        if (lastRecord?.sanction_number) {
-            const parts = lastRecord.sanction_number.split("/");
-            const lastRunning = parseInt(parts[2] ?? "0", 10);
-            if (!isNaN(lastRunning)) runningNumber = lastRunning + 1;
-        }
-        const runningStr = runningNumber.toString().padStart(3, "0");
-        this.sanction_number = `${districtCode}/${financialYear}/${runningStr}`;
-        this.financial_year = financialYear;
+        // if (lastRecord?.sanction_number) {
+        //     const parts = lastRecord.sanction_number.split("/");
+        //     const lastRunning = parseInt(parts[2] ?? "0", 10);
+        //     if (!isNaN(lastRunning)) runningNumber = lastRunning + 1;
+        // }
+        // const runningStr = runningNumber.toString().padStart(3, "0");
+        // this.sanction_number = `${districtCode}/${financialYear}/${runningStr}`;
+        // this.financial_year = financialYear;
     }
 
-    // ✅ Always: Sanctioned <= Allocated
+    // Always: Sanctioned <= Allocated
     if (this.sanctioned_budget > this.allocated_budget) {
         return next(
             new Error(
@@ -153,25 +150,25 @@ budgetHeadSchema.pre<BudgetHeadDocument>("save", async function (next) {
         );
     }
 
-    // ✅ Always: Released <= Sanctioned
-    if (this.released_budget > this.sanctioned_budget) {
-        return next(
-            new Error(
-                `Released budget (${this.released_budget}) cannot exceed sanctioned budget (${this.sanctioned_budget})`
-            )
-        );
-    }
+    // Always: Released <= Sanctioned
+    // if (this.released_budget > this.sanctioned_budget) {
+    //     return next(
+    //         new Error(
+    //             `Released budget (${this.released_budget}) cannot exceed sanctioned budget (${this.sanctioned_budget})`
+    //         )
+    //     );
+    // }
 
     // Auto-set dates if not already set
-    if (this.isModified("allocated_budget") && this.allocated_budget && !this.allocated_budget_date) {
-        this.allocated_budget_date = new Date();
-    }
-    if (this.isModified("sanctioned_budget") && this.sanctioned_budget && !this.sanctioned_budget_date) {
-        this.sanctioned_budget_date = new Date();
-    }
-    if (this.isModified("released_budget") && this.released_budget && !this.release_budget_date) {
-        this.release_budget_date = new Date();
-    }
+    // if (this.isModified("allocated_budget") && this.allocated_budget && !this.allocated_budget_date) {
+    //     this.allocated_budget_date = new Date();
+    // }
+    // if (this.isModified("sanctioned_budget") && this.sanctioned_budget && !this.sanctioned_budget_date) {
+    //     this.sanctioned_budget_date = new Date();
+    // }
+    // if (this.isModified("released_budget") && this.released_budget && !this.release_budget_date) {
+    //     this.release_budget_date = new Date();
+    // }
 
     next();
 });

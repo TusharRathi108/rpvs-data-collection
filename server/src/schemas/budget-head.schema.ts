@@ -8,7 +8,7 @@ const BudgetHeadBaseSchema = z.object({
 
     allocated_budget: z.number().nonnegative().optional(),
     sanctioned_budget: z.number().nonnegative().optional(),
-    released_budget: z.number().nonnegative().optional(),
+    // released_budget: z.number().nonnegative().optional(),
 });
 
 const CreateBudgetHeadSchema = BudgetHeadBaseSchema.extend({
@@ -16,14 +16,20 @@ const CreateBudgetHeadSchema = BudgetHeadBaseSchema.extend({
     district_code: z.string().trim().min(1),
     district_name: z.string().trim().min(1),
     allocated_budget: z.number().nonnegative(),
+    sanction_reference_number: z.string().trim().min(1),
+    sanctioned_budget: z.number().nonnegative().optional(),
+    sanctioned_budget_date: z.string().trim().transform((val) => new Date(val)),
 });
 
 const UpdateBudgetHeadSchema = BudgetHeadBaseSchema.extend({
     district_id: zObjectId,
     district_code: z.string().trim().min(1),
     district_name: z.string().trim().min(1),
-    sanctioned_budget: z.number().nonnegative(),
-    released_budget: z.number().nonnegative().optional(),
+    allocated_budget: z.number().nonnegative(),
+    sanction_reference_number: z.string().trim().min(1),
+    sanctioned_budget: z.number().nonnegative().optional(),
+    sanctioned_budget_date: z.string().trim().transform((val) => new Date(val)),
+    // released_budget: z.number().nonnegative().optional(),
 });
 
 const PartialUpdateBudgetHeadSchema = BudgetHeadBaseSchema.extend({

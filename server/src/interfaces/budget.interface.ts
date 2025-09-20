@@ -15,10 +15,8 @@ interface IBudgetHead {
     sanctioned_budget: Types.Double
     sanctioned_budget_date: Date
 
-    released_budget: Types.Double
-    release_budget_date: Date
+    isDeleted: boolean
 
-    isActive: boolean
     createdBy: Types.ObjectId
     updatedBy: Types.ObjectId
     lastActionTakenBy: Types.ObjectId

@@ -21,8 +21,10 @@ const createBudgetHead = async (request: Request, response: Response) => {
         const payloadWithAudit = {
             ...parsedPayload,
             createdBy: toObjectId(user?.user_id),
-            updatedBy: user?.user_id,
-            lastActionTakenBy: user?.user_id,
+            updatedBy: toObjectId(user?.user_id),
+            lastActionTakenBy: toObjectId(user?.user_id),
+            sanction_number: parsedPayload.sanction_reference_number,
+            allocated_budget_date: parsedPayload.sanctioned_budget_date
         };
 
         const result = await BudgetHeadModel.create(payloadWithAudit);
@@ -44,9 +46,9 @@ const fetchBudgetDetails = async (request: Request, response: Response) => {
     try {
         const user = request.user as SessionUser;
 
-        const pipeline: any[] = [
+        const pipeline: PipelineStage[] = [
             {
-                $match: { isActive: true },
+                $match: { isDeleted: false },
             },
         ];
 
@@ -178,7 +180,7 @@ const updateBudgetHead = async (request: Request, response: Response) => {
 
         const existing = await BudgetHeadModel.findOne({
             _id: toObjectId(budget_head_id),
-            isActive: true,
+            isDeleted: false,
         });
 
         if (!existing) {
