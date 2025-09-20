@@ -35,7 +35,7 @@ import type { DataTableProps } from "@/interfaces/data-table.interface";
 export function DataTable<TData, TValue>({
   columns,
   data,
-  searchKey = "email",
+  searchKey = "",
   showColumnSelector = true,
   showPagination = true,
 }: DataTableProps<TData, TValue>) {

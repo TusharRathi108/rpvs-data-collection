@@ -1,7 +1,7 @@
 //* package imports
 import { z } from "zod"
 
-const BudgetHeadSchema = z.object({
+const budgetHeadSchema = z.object({
     district_id: z.string().min(1, "District ID is required"),
     district_code: z.string().min(1, "District code is required"),
     district_name: z.string().min(1, "District name is required"),
@@ -23,11 +23,17 @@ const BudgetHeadSchema = z.object({
         }),
 
     sanctioned_budget_date: z.string().min(1, "Sanctioned Date is required")
-});
+}).refine(
+    (data) => Number(data.sanctioned_budget) <= Number(data.allocated_budget),
+    {
+        message: "Sanctioned budget cannot exceed allocated budget",
+        path: ["sanctioned_budget"],
+    }
+)
 
-type BudgetHeadFormValues = z.infer<typeof BudgetHeadSchema>;
+type budgetHeadFormSchema = z.infer<typeof budgetHeadSchema>;
 
 export {
-    BudgetHeadSchema,
-    type BudgetHeadFormValues
+    budgetHeadSchema,
+    type budgetHeadFormSchema
 }

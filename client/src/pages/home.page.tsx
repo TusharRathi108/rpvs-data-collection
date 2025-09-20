@@ -12,13 +12,13 @@ import { useFetchDistrictsQuery } from "@/store/services/location.api";
 import { useGetAllBankHeadsQuery } from "@/store/services/bank-head.api";
 import { useGetAllBudgetHeadsQuery } from "@/store/services/budget-head.api";
 
-import BankMasterForm from "@/components/mini-components/bank-form";
-import BudgetHeadForm from "@/components/mini-components/budget-form";
+import BankMasterForm from "@/components/forms/bank-form";
+import BudgetHeadForm from "@/components/forms/budget-form";
 import CardWrapper from "@/components/card-wrapper";
 import { DataTable } from "@/components/data-table/data-table";
 import {
   budgetHeadColumns,
-  getBankDetailsColumns,
+  bankHeadColumns,
   type BudgetHead,
   type BankDetails,
   type ProposalMaster,
@@ -29,10 +29,11 @@ import {
   type ImplementationAgency,
 } from "@/components/data-table/columns";
 import PageLoader from "@/components/mini-components/page-loader";
-import ProposalForm from "@/components/mini-components/proposal-form";
+import ProposalForm from "@/components/forms/proposal-form";
 import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
-import DepartmentMasterForm from "@/components/mini-components/department-form";
-import ImplementationAgencyForm from "@/components/mini-components/ia-form";
+import DepartmentMasterForm from "@/components/forms/department-form";
+import ImplementationAgencyForm from "@/components/forms/ia-form";
+import { useEditableRow } from "@/hooks/useEditableRow";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -96,23 +97,15 @@ const HomePage = () => {
 
   const TAB_OPTIONS = useMemo(() => getTabOptions(user?.role_name), [user]);
 
-  // table states
-  const [budgetTableData, setBudgetTableData] = useState<BudgetHead[]>([]);
   const [bankTableData, setBankTableData] = useState<BankDetails[]>([]);
+  const [budgetTableData, setBudgetTableData] = useState<BudgetHead[]>([]);
+  const [iaTableData, setIATableData] = useState<ImplementationAgency[]>([]);
   const [proposalTableData, setProposalTableData] = useState<ProposalMaster[]>(
     []
   );
   const [departmentTableData, setDepartmentTableData] = useState<Department[]>(
     []
   );
-  const [iaTableData, setIATableData] = useState<ImplementationAgency[]>([]);
-
-  // selected row states
-  const [selectedBankHead, setSelectedBankHead] = useState<BankDetails | null>(
-    null
-  );
-  const [selectedBudgetHead, setSelectedBudgetHead] =
-    useState<BudgetHead | null>(null);
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalMaster | null>(null);
 
@@ -122,15 +115,25 @@ const HomePage = () => {
     null
   );
 
+  const {
+    editingRow: editingBudget,
+    handleToggleEdit: handleBudgetEdit,
+    cancelEdit: cancelBudgetEdit,
+  } = useEditableRow<BudgetHead>();
+
+  const {
+    editingRow: editingBank,
+    handleToggleEdit: handleBankEdit,
+    cancelEdit: cancelBankEdit,
+  } = useEditableRow<BankDetails>();
+
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
   );
 
-  const handleEditBankHead = (row: BankDetails) => setSelectedBankHead(row);
-  const handleEditBudgetHead = (row: BudgetHead) => setSelectedBudgetHead(row);
+  const handleEditIA = (row: ImplementationAgency) => setSelectedIA(row);
   const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
   const handleEditDepartment = (row: Department) => setSelectedDepartment(row);
-  const handleEditIA = (row: ImplementationAgency) => setSelectedIA(row);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -266,7 +269,7 @@ const HomePage = () => {
     }
   }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
 
-  //* Logout
+  //* logout
   const handleLogout = async () => {
     try {
       await logout().unwrap();
@@ -285,20 +288,19 @@ const HomePage = () => {
         <BudgetHeadForm
           districts={districts}
           isLoading={districtsLoading}
-          initialData={selectedBudgetHead}
-          onSuccess={() => setSelectedBudgetHead(null)}
+          initialData={editingBudget}
+          onSuccess={cancelBudgetEdit}
         />
       );
     }
 
     if (activeTab === "bank-master") {
-      const bankFormData = selectedBankHead ? { ...selectedBankHead } : null;
       return (
         <BankMasterForm
           districts={districts}
           isLoading={districtsLoading}
-          initialData={bankFormData}
-          onSuccess={() => setSelectedBankHead(null)}
+          initialData={editingBank}
+          onSuccess={cancelBankEdit}
         />
       );
     }
@@ -316,7 +318,7 @@ const HomePage = () => {
                       : "OTHER",
                   area_type: selectedProposal.area_type === "RU" ? "RU" : "UR",
 
-                  // ✅ Full LocationSchema mapping
+                  // Full LocationSchema mapping
                   location: {
                     area_type:
                       selectedProposal.area_type === "RU" ? "RU" : "UR",
@@ -399,7 +401,7 @@ const HomePage = () => {
       if (budgetHeadsLoading || districtsLoading) return <PageLoader />;
       return (
         <DataTable
-          columns={budgetHeadColumns((row) => handleEditBudgetHead(row))}
+          columns={budgetHeadColumns(handleBudgetEdit, editingBudget)}
           data={budgetTableData}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           showPagination
@@ -411,11 +413,12 @@ const HomePage = () => {
       if (bankHeadsLoading) return <PageLoader />;
       return (
         <DataTable
-          columns={getBankDetailsColumns(user?.role_name || "", (row) =>
-            handleEditBankHead(row)
+          columns={bankHeadColumns(
+            user?.role_name || "",
+            handleBankEdit,
+            editingBank
           )}
           data={bankTableData}
-          searchKey={TAB_OPTIONS[activeTab].searchKey}
           showPagination
         />
       );
@@ -462,19 +465,19 @@ const HomePage = () => {
   return (
     <main className="p-2 flex min-h-screen flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
       <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
-        <h1 className="text-2xl drop-shadow-2xl">
-          📜 Rangla Punjab Vikas Scheme
-        </h1>
+        <p className="bg-blue-800/25 text-xl text-blue-950 rounded-2xl p-3">
+          USER: {user?.username}
+        </p>{" "}
         <button
-          className="bg-red-500/90 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+          className="bg-red-500/90 text-white px-4 py-2 rounded-2xl hover:bg-red-600 transition-colors"
           onClick={handleLogout}
           disabled={isLoggingOut}
         >
-          {isLoggingOut ? "Logging out..." : "Logout"}
+          {isLoggingOut ? "Logging out..." : "LOGOUT"}
         </button>
       </nav>
 
-      <div className="flex flex-col items-center gap-2 w-full">
+      <div className="flex flex-col items-center gap-2 pt-5 w-full">
         <section className="flex flex-col w-5/6">
           <div className="flex flex-col gap-5 card backdrop-blur-md overflow-hidden">
             <div className="flex p-2 gap-2 bg-white/50 rounded-2xl">
@@ -493,7 +496,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        <div className="flex flex-1 mt-2">
+        <div className="flex flex-1 pt-5">
           <CardWrapper
             className="w-full"
             headerLabel={TAB_OPTIONS[activeTab]?.label}
@@ -501,7 +504,7 @@ const HomePage = () => {
             {renderForm()}
           </CardWrapper>
         </div>
-        <div className="w-full pt-10">{renderTable()}</div>
+        <div className="w-full pt-5">{renderTable()}</div>
       </div>
     </main>
   );

@@ -1,20 +1,19 @@
 //* package imports
-import { Toaster } from "sonner";
+import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { RouterProvider } from "react-router";
 
 //*  file imports
+import { Toaster } from "sonner";
 import rootRouter from "@/routes/root.route";
-import { RouterProvider } from "react-router";
-import { type RootState } from "@/store/store";
 import { setUser } from "@/store/slices/auth-slice";
 
 const App = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
+  // const user = useSelector((state: RootState) => state.auth.user);
   const [sessionChecked, setSessionChecked] = useState(false);
 
-  console.log("First Log: ", user);
+  // console.log("First Log: ", user);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {

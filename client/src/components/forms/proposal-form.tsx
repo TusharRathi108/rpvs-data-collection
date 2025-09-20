@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiSelectWithBadges } from "./multi-select";
+import { MultiSelectWithBadges } from "../mini-components/multi-select";
 
 //* schemas & types
 import {

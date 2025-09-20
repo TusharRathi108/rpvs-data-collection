@@ -7,7 +7,7 @@ const baseApi = createApi({
         baseUrl: import.meta.env.VITE_API_URL,
         credentials: "include",
     }),
-    tagTypes: ["BudgetHead", "BankHead", "User", "Project", "Proposal", "Location", "MLA", "Sector", "SubSectorWork"],
+    tagTypes: ["BudgetHead", "IfscCode", "BankHead", "User", "Project", "Proposal", "Location", "MLA", "Sector", "SubSectorWork"],
     endpoints: () => ({}),
 });
 

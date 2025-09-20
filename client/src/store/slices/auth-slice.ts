@@ -28,7 +28,7 @@ const authSlice = createSlice({
         setUser: (state, action: PayloadAction<Partial<User>>) => {
             const payload = action.payload;
 
-            console.log("LOG IN AUHT SLICE: ", payload)
+            // console.log("LOG IN AUHT SLICE: ", payload)
 
             state.user = {
                 user_id: payload.user_id!,

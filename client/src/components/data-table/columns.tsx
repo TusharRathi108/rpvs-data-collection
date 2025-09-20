@@ -1,6 +1,6 @@
 //* package imports
 import { ArrowUpDown } from "lucide-react";
-import { MdDelete, MdEditSquare } from "react-icons/md";
+import { MdEditSquare } from "react-icons/md";
 import { type ColumnDef, type Row } from "@tanstack/react-table";
 
 //* file imports
@@ -13,18 +13,19 @@ type BudgetHead = {
   district_id: string;
   district_code: string;
   district_name: string;
-  sanction_number: string;
   financial_year: string;
+  sanction_number: string;
   allocated_budget: number;
-  allocated_budget_date: string;
   sanctioned_budget: number;
   sanctioned_budget_date: string;
-  released_budget: number;
-  release_budget_date: string;
+  // released_budget: number;
+  // release_budget_date: string;
+  // allocated_budget_date: string;
 };
 
 const budgetHeadColumns = (
-  onEdit: (row: BudgetHead) => void
+  onEdit: (row: BudgetHead) => void,
+  editingRow?: BudgetHead | null
 ): ColumnDef<BudgetHead>[] => [
   {
     accessorKey: "district_name",
@@ -91,33 +92,33 @@ const budgetHeadColumns = (
       return <div className="text-center">{formatted}</div>;
     },
   },
+  // {
+  //   accessorKey: "released_budget",
+  //   header: ({ column }) => (
+  //     <div className="text-center w-full">
+  //       <Button
+  //         variant="ghost"
+  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //       >
+  //         Released Budget
+  //         <ArrowUpDown />
+  //       </Button>
+  //     </div>
+  //   ),
+  //   cell: ({ row }) => {
+  //     const amount = parseFloat(row.getValue("released_budget"));
+  //     const formatted = new Intl.NumberFormat("en-IN", {
+  //       style: "currency",
+  //       currency: "INR",
+  //     }).format(amount);
+  //     return <div className="text-center">{formatted}</div>;
+  //   },
+  // },
   {
-    accessorKey: "released_budget",
-    header: ({ column }) => (
-      <div className="text-center w-full">
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Released Budget
-          <ArrowUpDown />
-        </Button>
-      </div>
-    ),
+    accessorKey: "sanctioned_budget_date",
+    header: () => <div className="text-center">Sanction Budget Date</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("released_budget"));
-      const formatted = new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-      }).format(amount);
-      return <div className="text-center">{formatted}</div>;
-    },
-  },
-  {
-    accessorKey: "allocated_budget_date",
-    header: () => <div className="text-center">Allocated Date</div>,
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("allocated_budget_date"));
+      const date = new Date(row.getValue("sanctioned_budget_date"));
       const formatted = date.toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "2-digit",
@@ -129,27 +130,26 @@ const budgetHeadColumns = (
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => (
-      <div className="flex justify-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(row.original)}
-          className="text-green-600 hover:text-green-800"
-        >
-          <MdEditSquare size={20} />
-        </Button>
+    cell: ({ row }) => {
+      const isEditing = editingRow?._id === row.original._id;
 
-        {/* <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => console.log("Delete BudgetHead:", row.original._id)}
-          className="text-red-600 hover:text-red-800"
-        >
-          <MdDelete size={20} />
-        </Button> */}
-      </div>
-    ),
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+          </Button>
+        </div>
+      );
+    },
   },
 ];
 
@@ -166,14 +166,12 @@ type BankDetails = {
   ifsc_code: string;
   branch_name: string;
   branch_code: string;
-  createdAt: string;
-  updatedAt: string;
 };
 
-const getBankDetailsColumns = (
+const bankHeadColumns = (
   userRole: string,
-  onEdit?: (row: BankDetails) => void,
-  onDelete?: (row: BankDetails) => void
+  onEdit: (row: BankDetails) => void,
+  editingRow?: BankDetails | null
 ): ColumnDef<BankDetails>[] => {
   const baseColumns: ColumnDef<BankDetails>[] = [
     {
@@ -214,30 +212,26 @@ const getBankDetailsColumns = (
     {
       id: "actions",
       header: () => <div className="text-center">Actions</div>,
-      cell: ({ row }: { row: Row<BankDetails> }) => (
-        <div className="flex justify-center gap-3">
-          {onEdit && (
+      cell: ({ row }) => {
+        const isEditing = editingRow?._id === row.original._id;
+
+        return (
+          <div className="flex justify-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onEdit(row.original)}
-              className="text-green-600 hover:text-green-800"
+              className={
+                isEditing
+                  ? "text-red-600 hover:text-red-800"
+                  : "text-green-600 hover:text-green-800"
+              }
             >
-              <MdEditSquare size={20} />
+              {isEditing ? "Cancel" : <MdEditSquare size={20} />}
             </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(row.original)}
-              className="text-red-600 hover:text-red-800"
-            >
-              <MdDelete size={20} />
-            </Button>
-          )}
-        </div>
-      ),
+          </div>
+        );
+      },
     },
   ];
 
@@ -556,7 +550,7 @@ export {
   type BudgetHead,
   budgetHeadColumns,
   type BankDetails,
-  getBankDetailsColumns,
+  bankHeadColumns,
   type ProposalMaster,
   getProposalColumns,
   type Department,

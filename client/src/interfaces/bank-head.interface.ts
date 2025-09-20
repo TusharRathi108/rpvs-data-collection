@@ -3,16 +3,19 @@ export interface BankHead {
     district_id: string;
     district_code: string;
     district_name: string;
+
     agency_code?: string;
     agency_name?: string;
-    bank_name: string;
     account_number: string;
+
+    rbo: string;
     ifsc_code: string;
-    branch_name: string;
     branch_code: string;
-    createdAt: string;
-    updatedAt: string;
-    isDeleted?: boolean;
+    branch_name: string;
+    bank_name: string;
+    branch_manager_name: string;
+    contact_number: string;
+    remarks: string;
 }
 
 export interface CreateBankHeadRequest {
@@ -22,11 +25,16 @@ export interface CreateBankHeadRequest {
 
     agency_code?: string;
     agency_name?: string;
-    bank_name: string;
     account_number: string;
+
+    rbo: string;
     ifsc_code: string;
-    branch_name?: string;
     branch_code: string;
+    branch_name: string;
+    bank_name: string;
+    branch_manager_name: string;
+    contact_number: string;
+    remarks: string;
 }
 
 export interface CreateBankHeadResponse {
@@ -41,15 +49,19 @@ export interface BankDetails {
     district_id: string
     district_code: string
     district_name: string
+
     agency_code?: string
     agency_name?: string
-    bank_name: string
     account_number: string
-    ifsc_code: string
-    branch_name: string
-    branch_code: string
-    createdAt: string
-    updatedAt: string
+
+    rbo: string;
+    ifsc_code: string;
+    branch_code: string;
+    branch_name: string;
+    bank_name: string;
+    branch_manager_name: string;
+    contact_number: number;
+    remarks: string;
 }
 
 export interface FetchBankHeadResponse {
@@ -78,6 +90,8 @@ export interface UpdateBankHeadRequest {
     account_number?: string;
     ifsc_code?: string;
     branch_name?: string;
+    contact_number?: string;
+
     branch_code?: string;
 
     isDeleted?: boolean;
