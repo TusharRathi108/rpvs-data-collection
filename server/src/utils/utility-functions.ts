@@ -10,6 +10,10 @@ export const zObjectId = z
     })
     .transform((value) => new Types.ObjectId(value));
 
+export const contactNumberValidator = z
+    .string()
+    .regex(/^\d{10}$/, { message: "Contact number must be exactly 10 digits" });
+
 export const istDateSchema = z
     .union([z.string(), z.null(), z.undefined()])
     .transform((val) => parseISTDate(val))

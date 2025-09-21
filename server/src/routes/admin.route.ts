@@ -2,6 +2,7 @@
 import { Router } from "express";
 
 //* file imports
+import iaRouter from "@/routes/protected-routes/ia.route";
 import roleRouter from "@/routes/protected-routes/role.route"
 import userRouter from "@/routes/protected-routes/user.route";
 import sectorRouter from "@/routes/protected-routes/sector.route";
@@ -10,6 +11,7 @@ import ifscRouter from "@/routes/protected-routes/ifsc.controller";
 import proposalRouter from "@/routes/protected-routes/proposal.route";
 import locationRouter from "@/routes/protected-routes/location.route";
 import budgetRouter from "@/routes/protected-routes/budget-head.route";
+import departmentRouter from "@/routes/protected-routes/department.route";
 
 //* initialise router
 const adminRouter: Router = Router()
@@ -22,5 +24,7 @@ adminRouter.use('/sectors', sectorRouter)
 adminRouter.use('/location', locationRouter)
 adminRouter.use('/budget-head', budgetRouter)
 adminRouter.use('/proposals', proposalRouter)
+adminRouter.use('/departments', departmentRouter)
+adminRouter.use('/implementation-agency', iaRouter)
 
 export default adminRouter
