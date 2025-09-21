@@ -162,7 +162,11 @@ const HomePage = () => {
     data: bankHeadsData,
     isLoading: bankHeadsLoading,
     error: bankHeadsError,
-  } = useGetAllBankHeadsQuery();
+  } = useGetAllBankHeadsQuery(
+    user?.role_name === "District"
+      ? { agency_details: true }
+      : { agency_details: false }
+  );
 
   const {
     data: proposalsData,

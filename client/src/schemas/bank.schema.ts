@@ -33,14 +33,14 @@ const createBankMasterSchema = (role_name: string, isEdit = false) => {
     if (role_name === "District") {
         return z.object({
             ...baseSchema,
-            agency_code: z.string().min(1, "Agency code is required"),
+            agency_id: z.string().min(1, "Agency ID is required"),
             agency_name: z.string().min(1, "Agency name is required"),
         });
     }
 
     return z.object({
         ...baseSchema,
-        agency_code: z.string().optional(),
+        agency_id: z.string().optional(),
         agency_name: z.string().optional(),
     });
 };

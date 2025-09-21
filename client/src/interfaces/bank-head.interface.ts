@@ -4,7 +4,7 @@ export interface BankHead {
     district_code: string;
     district_name: string;
 
-    agency_code?: string;
+    agency_id?: string;
     agency_name?: string;
     account_number: string;
 
@@ -23,7 +23,7 @@ export interface CreateBankHeadRequest {
     district_code: string;
     district_name: string;
 
-    agency_code?: string;
+    agency_id?: string;
     agency_name?: string;
     account_number: string;
 
@@ -50,7 +50,7 @@ export interface BankDetails {
     district_code: string
     district_name: string
 
-    agency_code?: string
+    agency_id?: string
     agency_name?: string
     account_number: string
 
@@ -83,7 +83,7 @@ export interface UpdateBankHeadRequest {
     district_code?: string;
     district_name?: string;
 
-    agency_code?: string;
+    agency_id?: string;
     agency_name?: string;
 
     bank_name?: string;

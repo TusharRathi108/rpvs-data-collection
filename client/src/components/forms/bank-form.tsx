@@ -31,11 +31,12 @@ import { Form } from "@/components/ui/form";
 import NumberInput from "@/components/mini-components/number-input";
 import SelectField from "@/components/mini-components/select-field";
 import TextInput from "@/components/mini-components/text-input";
+import { useGetImplementationAgenciesDistrictWiseQuery } from "@/store/services/ia.api";
 
 //? helpers
 const getDefaultValues = (): BankMasterFormValues => ({
   district_id: "",
-  agency_code: "",
+  agency_id: "",
   agency_name: "",
   bank_name: "",
   account_number: "",
@@ -69,33 +70,32 @@ const parsePayload = (
   };
 };
 
-const defaultIAs = [
-  {
-    _id: "68d0c5a1f6c9f0c9a3c4b111",
-    agency_name: "PWD - Public Works Department",
-  },
-  {
-    _id: "68d0c5a1f6c9f0c9a3c4b112",
-    agency_name: "Rural Development Department",
-  },
-  { _id: "68d0c5a1f6c9f0c9a3c4b113", agency_name: "Municipal Corporation" },
-];
-
 const BankMasterForm = ({
   districts,
   isLoading,
   initialData,
   onSuccess,
 }: HeadFormProps<BankHead>) => {
-  const { role_name } = useCurrentUser();
+  const { user, role_name } = useCurrentUser();
+  const userDistrictId = user?.district?._id;
+
+  // console.log("DISTRICT INFO: ", userDistrictId);
 
   const form = useForm<BankMasterFormValues>({
     resolver: zodResolver(createBankMasterSchema(role_name)),
-    defaultValues: getDefaultValues(),
+    defaultValues: {
+      ...getDefaultValues(),
+      district_id: initialData?.district_id || userDistrictId || "",
+    },
   });
 
   const selectedDistrictId =
-    form.watch("district_id") || initialData?.district_id;
+    form.watch("district_id") || initialData?.district_id || userDistrictId;
+
+  const { data: iaData, isLoading: iaLoading } =
+    useGetImplementationAgenciesDistrictWiseQuery(
+      selectedDistrictId ? selectedDistrictId : skipToken
+    );
 
   const { data: ifscData } = useGetIfscCodeByIdQuery(
     selectedDistrictId ? selectedDistrictId : skipToken
@@ -143,10 +143,43 @@ const BankMasterForm = ({
 
   //* hydrate form when editing
   useEffect(() => {
+    if (initialData?.ifsc_code && ifscData?.records) {
+      const match = ifscData.records.find(
+        (r) => r.ifsc_code === initialData.ifsc_code
+      );
+      if (match) {
+        form.setValue("ifsc_code", match.ifsc_code, { shouldValidate: true });
+      }
+    }
+  }, [ifscData?.records, initialData?.ifsc_code, form]);
+
+  useEffect(() => {
+    if (iaData?.records?.length) {
+      if (initialData?.agency_id) {
+        const match = iaData.records.find(
+          (ia) => ia._id === initialData.agency_id
+        );
+        if (match) {
+          form.setValue("agency_id", match._id);
+          form.setValue("agency_name", match.agency_name);
+        }
+      } else if (initialData?.agency_name) {
+        const match = iaData.records.find(
+          (ia) => ia.agency_name === initialData.agency_name
+        );
+        if (match) {
+          form.setValue("agency_id", match._id);
+          form.setValue("agency_name", match.agency_name);
+        }
+      }
+    }
+  }, [iaData?.records, initialData, form]);
+
+  useEffect(() => {
     if (initialData) {
       form.reset({
-        district_id: initialData.district_id ?? "",
-        agency_code: initialData.agency_code ?? "",
+        district_id: initialData.district_id ?? userDistrictId ?? "",
+        agency_id: initialData.agency_id ?? "",
         agency_name: initialData.agency_name ?? "",
         bank_name: initialData.bank_name ?? "",
         account_number: initialData.account_number ?? "",
@@ -160,22 +193,13 @@ const BankMasterForm = ({
           : "",
         remarks: initialData.remarks ?? "",
       });
-    } else {
-      form.reset(getDefaultValues());
+    } else if (userDistrictId) {
+      form.reset({
+        ...getDefaultValues(),
+        district_id: userDistrictId ?? "",
+      });
     }
-  }, [initialData, form]);
-
-  useEffect(() => {
-    if (initialData?.ifsc_code && ifscData?.records) {
-      const match = ifscData.records.find(
-        (r) => r.ifsc_code === initialData.ifsc_code
-      );
-
-      if (match) {
-        form.setValue("ifsc_code", match.ifsc_code, { shouldValidate: true });
-      }
-    }
-  }, [ifscData, initialData, form]);
+  }, [initialData, userDistrictId, form]);
 
   return (
     <div className="tab-content active">
@@ -184,7 +208,7 @@ const BankMasterForm = ({
           onSubmit={form.handleSubmit(onSubmit, (errors) =>
             console.log("Validation errors:", errors)
           )}
-          className="flex flex-col items-center space-y-6 w-full"
+          className="flex flex-col space-y-6 w-full"
         >
           <div className="flex items-center w-full gap-5">
             {/* District */}
@@ -197,11 +221,16 @@ const BankMasterForm = ({
                 label: district.district_name,
                 ...district,
               }))}
-              disabled={!!initialData}
+              disabled={!!initialData || !!userDistrictId}
               isLoading={isLoading}
               placeholder="Select District"
+              fallbackLabel={
+                initialData?.district_name || user?.district?.district_name
+              }
               onSelect={(selected) => {
-                form.setValue("district_id", selected._id);
+                form.setValue("district_id", selected._id, {
+                  shouldValidate: true,
+                });
               }}
             />
 
@@ -294,16 +323,21 @@ const BankMasterForm = ({
           {role_name === "District" && (
             <SelectField
               control={form.control}
-              name="agency_code"
+              name="agency_id"
               label="Implementation Agency"
-              options={defaultIAs.map((ia) => ({
-                value: ia._id,
-                label: ia.agency_name,
-                ...ia,
-              }))}
+              options={
+                iaData?.records?.map((ia) => ({
+                  value: ia._id,
+                  label: ia.agency_name,
+                  ...ia,
+                })) || []
+              }
+              isLoading={iaLoading}
               placeholder="Select Agency"
+              classStyleFieldControl="w-2/6"
+              fallbackLabel={initialData?.agency_name}
               onSelect={(selected) => {
-                form.setValue("agency_code", selected._id);
+                form.setValue("agency_id", selected._id);
                 form.setValue("agency_name", selected.agency_name);
               }}
             />

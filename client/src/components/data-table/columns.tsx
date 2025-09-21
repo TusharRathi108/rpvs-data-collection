@@ -159,7 +159,6 @@ type BankDetails = {
   district_id: string;
   district_code: string;
   district_name: string;
-  agency_code?: string;
   agency_name?: string;
   bank_name: string;
   account_number: string;
@@ -236,24 +235,13 @@ const bankHeadColumns = (
   ];
 
   if (userRole !== "Planning") {
-    baseColumns.splice(
-      1,
-      0,
-      {
-        accessorKey: "agency_code",
-        header: () => <div className="text-center">Agency Code</div>,
-        cell: ({ row }: { row: Row<BankDetails> }) => (
-          <div className="text-center">{row.getValue("agency_code")}</div>
-        ),
-      },
-      {
-        accessorKey: "agency_name",
-        header: () => <div className="text-center">Agency Name</div>,
-        cell: ({ row }: { row: Row<BankDetails> }) => (
-          <div className="text-center">{row.getValue("agency_name")}</div>
-        ),
-      }
-    );
+    baseColumns.splice(1, 0, {
+      accessorKey: "agency_name",
+      header: () => <div className="text-center">Agency Name</div>,
+      cell: ({ row }: { row: Row<BankDetails> }) => (
+        <div className="text-center">{row.getValue("agency_name")}</div>
+      ),
+    });
   }
 
   return baseColumns;
@@ -563,6 +551,7 @@ const getImplementationAgencyColumns = (
     },
   },
 ];
+
 export {
   type BudgetHead,
   budgetHeadColumns,

@@ -5,6 +5,7 @@ import {
   type FieldValues,
   type Path,
 } from "react-hook-form";
+import { cn } from "@/lib/utils";
 
 //* file imports
 import {
@@ -36,7 +37,9 @@ interface SelectFieldProps<T extends FieldValues> {
   disabled?: boolean;
   isLoading?: boolean;
   placeholder?: string;
+  classStyleFieldControl?: string;
   onSelect?: (option: SelectOption) => void;
+  fallbackLabel?: string;
 }
 
 const SelectField = <T extends FieldValues>({
@@ -47,18 +50,22 @@ const SelectField = <T extends FieldValues>({
   disabled = false,
   isLoading = false,
   placeholder = "Select an option",
+  classStyleFieldControl = "",
   onSelect,
+  fallbackLabel,
 }: SelectFieldProps<T>) => {
   const {
     field,
     fieldState: { error },
   } = useController({ control, name });
 
+  const selectedOption = options.find((o) => o.value === field.value);
+
   return (
     <FormItem>
       <FormLabel>{label}</FormLabel>
       <Select
-        disabled={disabled}
+        disabled={disabled || isLoading}
         onValueChange={(value) => {
           field.onChange(value);
           const selected = options.find((o) => o.value === value);
@@ -67,16 +74,28 @@ const SelectField = <T extends FieldValues>({
         value={field.value}
       >
         <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
+          <SelectTrigger className={cn(classStyleFieldControl)}>
+            <SelectValue
+              placeholder={
+                isLoading
+                  ? "Loading..."
+                  : selectedOption?.label || fallbackLabel || placeholder
+              }
+            />
           </SelectTrigger>
         </FormControl>
         <SelectContent className="bg-white">
-          {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
+          {isLoading ? (
+            <SelectItem value="loading" disabled>
+              Loading...
             </SelectItem>
-          ))}
+          ) : (
+            options.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
       {error && <FormMessage>{error.message}</FormMessage>}

@@ -12,18 +12,17 @@ export const bankHeadApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["BankHead"],
         }),
-        getBankHeadById: builder.query<FetchBankHeadResponse, string>({
-            query: (bank_head_id) => ({
-                url: `bank-head/fetch-single-bank-head-details/${bank_head_id}`,
-                method: "GET",
-            }),
-            providesTags: ["BankHead"],
-        }),
-        getAllBankHeads: builder.query<FetchBankHeadResponse, void>({
-            query: () => ({
-                url: "bank-head/fetch-bank-details",
-                method: "GET",
-            }),
+        getAllBankHeads: builder.query<FetchBankHeadResponse, { agency_details?: boolean } | void>({
+            query: (params) => {
+                const queryString = params?.agency_details !== undefined
+                    ? `?agency_details=${params.agency_details}`
+                    : "";
+
+                return {
+                    url: `bank-head/fetch-bank-details${queryString}`,
+                    method: "GET",
+                };
+            },
             providesTags: ["BankHead"],
         }),
         updateBankHead: builder.mutation<
@@ -42,7 +41,6 @@ export const bankHeadApi = baseApi.injectEndpoints({
 
 export const {
     useCreateBankHeadMutation,
-    useGetBankHeadByIdQuery,
     useGetAllBankHeadsQuery,
     useUpdateBankHeadMutation
 } = bankHeadApi;
