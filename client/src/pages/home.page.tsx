@@ -422,7 +422,7 @@ const HomePage = () => {
       return (
         <DataTable
           columns={getProposalColumns(handleProposalEdit, editingProposal)}
-          data={processedProposals}
+          data={proposalTableData}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           showPagination
         />
@@ -495,7 +495,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        <div className="flex flex-1 pt-5">
+        <div className="flex flex-1 min-w-full pt-5 px-5">
           <CardWrapper
             className="w-full"
             headerLabel={TAB_OPTIONS[activeTab]?.label}
@@ -503,7 +503,7 @@ const HomePage = () => {
             {renderForm()}
           </CardWrapper>
         </div>
-        <div className="w-full pt-5">{renderTable()}</div>
+        <div className="w-full pt-5 px-5">{renderTable()}</div>
       </div>
     </main>
   );

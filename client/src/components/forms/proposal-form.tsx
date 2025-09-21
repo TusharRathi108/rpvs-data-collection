@@ -941,7 +941,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             control={form.control}
             name="recommender_email"
             render={({ field }) => (
-              <FormItem className="flex-1">
+              <FormItem>
                 <FormLabel>Recommender Email</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Enter email" type="email" />
@@ -955,7 +955,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             control={form.control}
             name="proposal_name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormLabel>Proposal Name</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Enter proposal name" />
@@ -1111,12 +1111,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 render={({ field }) => {
                   const options =
                     villagesData?.records?.map((v: any) => ({
-                      value: v._id.toString(), // ✅ use Mongo _id
+                      value: v._id.toString(),
                       label: v.village_name,
                     })) || [];
 
                   return (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>Villages</FormLabel>
                       <MultiSelectWithBadges
                         options={options}
@@ -1130,6 +1130,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         }
                         placeholder="Select Villages"
                         badgeColor="bg-blue-500"
+                        badgeClassName="w-[150px] truncate"
                       />
                     </FormItem>
                   );
@@ -1231,7 +1232,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 control={form.control}
                 name="location.ward_id"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex-1">
                     <FormLabel>Wards</FormLabel>
                     <MultiSelectWithBadges
                       options={
@@ -1251,7 +1252,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         )
                       }
                       placeholder="Select Wards"
-                      badgeClassName="w-[100px] truncate"
+                      badgeClassName="w-[150px] truncate"
                       badgeColor="bg-purple-500"
                     />
                   </FormItem>
@@ -1365,7 +1366,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   <Select
                     onValueChange={(val) => {
                       form.setValue("sub_sector", val, { shouldDirty: true });
-                      // Reset permissible works when sub-sector changes
                       form.setValue("permissible_work", []);
                     }}
                     value={field.value || ""}
@@ -1424,7 +1424,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     }
                     placeholder="Select Works"
                     badgeColor="bg-green-500"
-                    badgeClassName="w-[70px]"
+                    badgeClassName="w-[150px] truncate"
                     disabled={disableWorks}
                   />
                 </FormItem>
