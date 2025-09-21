@@ -13,6 +13,11 @@ const bankMasterSchema = new Schema<BankMasterDocument>(
             ref: "district",
             required: true,
         },
+        agency_id: {
+            type: Schema.Types.ObjectId,
+            ref: "implementation_agency",
+            required: true,
+        },
         district_code: {
             type: String,
             ref: "district",

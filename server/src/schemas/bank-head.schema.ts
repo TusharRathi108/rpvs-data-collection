@@ -4,17 +4,17 @@ import { zObjectId } from "@/utils/utility-functions";
 const getBankHeadBaseSchema = (role_name: string) =>
     z.object({
         district_id: zObjectId,
+        agency_id:
+            role_name === "District"
+                ? z.string().trim().min(1, "Agency ID is required")
+                : z.string().trim().optional(),
         district_code: z.string().trim().min(1, "District code is required"),
         district_name: z.string().trim().min(1, "District name is required"),
 
         rbo: z.string().trim().min(1, "RBO is required"),
 
-        agency_code:
-            role_name === "DLC"
-                ? z.string().trim().min(1, "Agency code is required")
-                : z.string().trim().optional(),
         agency_name:
-            role_name === "DLC"
+            role_name === "District"
                 ? z.string().trim().min(1, "Agency name is required")
                 : z.string().trim().optional(),
 

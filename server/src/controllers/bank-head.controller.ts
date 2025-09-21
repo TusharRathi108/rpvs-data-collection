@@ -43,6 +43,7 @@ const createBankHead = async (request: Request, response: Response) => {
 const fetchBankDetails = async (request: Request, response: Response) => {
     try {
         const user = request.user as SessionUser;
+        const { agency_details } = request.query as { agency_details: string };
 
         const baseProject = {
             _id: 1,
@@ -58,13 +59,16 @@ const fetchBankDetails = async (request: Request, response: Response) => {
             branch_manager_name: 1,
             contact_number: 1,
             remarks: 1,
-            createdAt: 1,
-            updatedAt: 1,
         };
 
-        const pipeline: any[] = [
+        const pipeline: PipelineStage[] = [
             {
-                $match: { isDeleted: false },
+                $match: {
+                    isDeleted: false,
+                    ...(agency_details === "true"
+                        ? { agency_id: { $ne: null } }
+                        : { agency_id: null }),
+                },
             },
             {
                 $project:
@@ -72,11 +76,12 @@ const fetchBankDetails = async (request: Request, response: Response) => {
                         ? baseProject
                         : {
                             ...baseProject,
-                            agency_code: 1,
+                            agency_id: 1,
                             agency_name: 1,
                         },
             },
         ];
+
 
         const result = await BankMasterModel.aggregate(pipeline);
 
@@ -138,7 +143,7 @@ const fetchAgencyBankDetails = async (request: Request, response: Response) => {
                     district_id: 1,
                     district_code: 1,
                     district_name: 1,
-                    agency_code: 1,
+                    agncy_id: 1,
                     agency_name: 1,
                     bank_name: 1,
                     account_number: 1,

@@ -3,6 +3,7 @@ import { Double, Types } from 'mongoose'
 
 interface IBank {
     district_id: Types.ObjectId
+    agency_id: Types.ObjectId
     district_code: string
     district_name: string
 
