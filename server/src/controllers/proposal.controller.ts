@@ -12,10 +12,6 @@ import { handleError, successHandler } from "@/globals/response-handler.helper";
 import {
     CreateProposalSchema,
     CreateProposalDto,
-    UpdateProposalSchema,
-    UpdateProposalDto,
-    PartialUpdateProposalDto,
-    PartialUpdateProposalSchema,
 } from "@/schemas/proposal.schema";
 import { generateProposalRef } from "@/utils/generate-reference_number";
 import { ProjectMasterModel } from "@/models/project.model";
@@ -246,18 +242,75 @@ const updateProposal = async (request: Request, response: Response) => {
             throwHttpException(ExceptionType.BadRequest, "Proposal ID is required");
         }
 
-        console.log(proposal_id)
-        console.log(request.body.data)
-
-        const result = await ProposalMasterModel.updateOne(
+        // 1. update Proposal
+        await ProposalMasterModel.updateOne(
             { _id: toObjectId(proposal_id), isDeleted: false },
-            { $set: request.body.data }
+            { $set: { ...request.body.data, updatedBy: toObjectId(user.user_id), lastActionTakenBy: toObjectId(user.user_id) } }
+        );
+
+        // 2. fetch updated proposal
+        const updatedProposal = await ProposalMasterModel.findById(proposal_id).lean();
+        if (!updatedProposal) {
+            throwHttpException(ExceptionType.NotFound, "Proposal not found after update");
+        }
+
+        // 3. sync changes into Project
+        const projectPayload = {
+            nodal_minister_id: updatedProposal.nodal_minister_id,
+            sector_id: updatedProposal.sector_id,
+            permissible_works_id: updatedProposal.permissible_works_id,
+            nodal_minister: updatedProposal.nodal_minister,
+            reference_number: updatedProposal.reference_number,
+            manual_reference_number: updatedProposal.manual_reference_number,
+            recommender_name: updatedProposal.recommender_name,
+            recommender_contact: updatedProposal.recommender_contact,
+            recommender_email: updatedProposal.recommender_email,
+            recommender_type: updatedProposal.recommender_type,
+            recommender_designation: updatedProposal.recommender_designation,
+            area_type: updatedProposal.area_type,
+            project_name: updatedProposal.proposal_name,
+            sector_name: updatedProposal.sector_name,
+            sub_sector_name: updatedProposal.sub_sector_name,
+            permissible_work: updatedProposal.permissible_work,
+            proposal_document: updatedProposal.proposal_document
+                ? [updatedProposal.proposal_document]
+                : [],
+            proposal_amount: updatedProposal.proposal_amount,
+            approved_by_dlc: updatedProposal.approved_by_dlc,
+            approved_by_nm: updatedProposal.approved_by_nm,
+            financial_year: updatedProposal.financial_year,
+            location: updatedProposal.location,
+            actionType: updatedProposal.actionType,
+            remarks: updatedProposal.remarks,
+            updatedBy: toObjectId(user.user_id),
+            lastActionTakenBy: toObjectId(user.user_id),
+        };
+
+        await ProjectMasterModel.updateOne(
+            { proposal_id: toObjectId(proposal_id), isDeleted: false },
+            { $set: projectPayload }
+        );
+
+        // 4. sync progress amounts/approvals too
+        await ProjectProgressModel.updateOne(
+            { proposal_id: toObjectId(proposal_id), isDeleted: false },
+            {
+                $set: {
+                    estimated_funds: updatedProposal.proposal_amount,
+                    sanctioned_funds: updatedProposal.proposal_amount,
+                    remaining_funds: updatedProposal.proposal_amount,
+                    approved_by_dlc: updatedProposal.approved_by_dlc,
+                    approved_by_nm: updatedProposal.approved_by_nm,
+                    updatedBy: toObjectId(user.user_id),
+                    lastActionTakenBy: toObjectId(user.user_id),
+                },
+            }
         );
 
         return successHandler({
             response,
-            records: result,
-            message: "Proposal updated successfully",
+            records: { proposal: updatedProposal },
+            message: "Proposal and related project updated successfully",
             status: true,
             httpCode: 200,
         });
@@ -268,35 +321,3 @@ const updateProposal = async (request: Request, response: Response) => {
 };
 
 export { createProposal, fetchProposalDetails, fetchSingleProposal, updateProposal };
-
-// const objectId = toObjectId(proposal_id);
-
-//         // ✅ Parse request
-//         const parsedPayload: PartialUpdateProposalDto =
-//             PartialUpdateProposalSchema.parse(request.body);
-
-//         // ✅ Keep only the fields that were actually sent
-//         const updateFields: any = Object.keys(request.body).reduce(
-//             (acc, key) => {
-//                 if (parsedPayload[key as keyof PartialUpdateProposalDto] !== undefined) {
-//                     acc[key] = parsedPayload[key as keyof PartialUpdateProposalDto];
-//                 }
-//                 return acc;
-//             },
-//             {}
-//         );
-
-//         // Always update audit fields
-//         updateFields.updatedBy = toObjectId(user.user_id);
-//         updateFields.lastActionTakenBy = toObjectId(user.user_id);
-
-//         // ✅ Update in DB
-//         const updatedProposal = await ProposalMasterModel.findByIdAndUpdate(
-//             objectId,
-//             { $set: updateFields },
-//             { new: true }
-//         );
-
-//         if (!updatedProposal) {
-//             throwHttpException(ExceptionType.NotFound, "Proposal not found");
-//         }
