@@ -1,20 +1,20 @@
 //* package imports
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { skipToken } from "@reduxjs/toolkit/query/react";
 
 //* file imports
 import { Button } from "@/components/ui/button";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,91 +22,132 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import TextInput from "@/components/mini-components/text-input";
 
+import type { ApiError } from "@/interfaces/api-error.interface";
 import type { HeadFormProps } from "@/interfaces/master-form.interface";
+import type {
+  ImplementationAgency,
+  CreateImplementationAgencyRequest,
+} from "@/interfaces/ia.interface";
+
 import {
   createIAMasterSchema,
   type IAMasterFormValues,
 } from "@/schemas/ia.schema";
 
-// Dummy IA type
-export type ImplementationAgency = {
-  _id?: string;
-  financial_year: string;
-  district_id: string;
-  district_name?: string;
-  block_id: string;
-  block_name?: string;
-  agency_name: string;
+import {
+  useCreateImplementationAgencyMutation,
+  useUpdateImplementationAgencyMutation,
+} from "@/store/services/ia.api";
+import { useFetchBlocksQuery } from "@/store/services/location.api";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+
+//* helpers
+const getDefaultValues = (): IAMasterFormValues => ({
+  district_id: "",
+  block_id: "",
+  agency_name: "",
+});
+
+const parsePayload = (
+  values: IAMasterFormValues,
+  districts: any[],
+  blocks: any[]
+): CreateImplementationAgencyRequest => {
+  const district = districts.find((d) => d._id === values.district_id);
+  const block = blocks.find((b: any) => b._id === values.block_id);
+
+  return {
+    district_id: values.district_id ?? "",
+    block_id: values.block_id ?? "",
+    district_code: district?.district_code ?? "",
+    district_name: district?.district_name ?? "",
+    block_code: block?.block_code ?? "",
+    block_name: block?.block_name ?? "",
+    agency_name: values.agency_name ?? "",
+  };
 };
 
 const ImplementationAgencyForm = ({
-  districts,
-  isLoading,
   initialData,
   onSuccess,
+  districts,
+  isLoading,
 }: HeadFormProps<ImplementationAgency>) => {
+  const { user } = useCurrentUser();
+
   const form = useForm<IAMasterFormValues>({
     resolver: zodResolver(createIAMasterSchema),
-    defaultValues: {
-      financial_year: "",
-      district_id: "",
-      block_id: "",
-      agency_name: "",
-    },
+    defaultValues: getDefaultValues(),
   });
 
+  const [createIA] = useCreateImplementationAgencyMutation();
+  const [updateIA] = useUpdateImplementationAgencyMutation();
+
+  const selectedDistrict = form.watch("district_id");
+
+  const stateCode = user?.state_code;
+  const districtCode =
+    districts.find((d) => d._id === selectedDistrict)?.district_code ?? "";
+
+  const { data: blocksData, isLoading: blocksLoading } = useFetchBlocksQuery(
+    stateCode && districtCode
+      ? { state_code: stateCode, district_code: districtCode }
+      : skipToken
+  );
+
+  //? handler
   const onSubmit = async (values: IAMasterFormValues) => {
+    const payload = parsePayload(values, districts, blocksData?.records || []);
+
     try {
       if (initialData?._id) {
-        console.log("Update IA:", initialData._id, values);
+        await updateIA({
+          agency_id: initialData._id,
+          payload,
+        }).unwrap();
         toast.success("Implementation Agency updated successfully");
       } else {
-        console.log("Create IA:", values);
+        await createIA(payload).unwrap();
         toast.success("Implementation Agency created successfully");
       }
+
       onSuccess?.();
-      form.reset();
-    } catch {
-      toast.error("Failed to submit Implementation Agency");
+      form.reset(getDefaultValues());
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      toast.error(
+        apiError?.data?.error?.message ||
+          apiError?.data?.message ||
+          "Failed to submit Implementation Agency"
+      );
     }
   };
 
+  //* hydrate form when editing
   useEffect(() => {
     if (initialData) {
       form.reset({
-        financial_year: initialData.financial_year ?? "",
         district_id: initialData.district_id ?? "",
         block_id: initialData.block_id ?? "",
         agency_name: initialData.agency_name ?? "",
       });
+    } else {
+      form.reset(getDefaultValues());
     }
   }, [initialData, form]);
 
   return (
-    <div className="tab-content">
+    <div className="tab-content active">
       <Form {...form}>
         <form
-          onSubmit={(e) => {
-            form.handleSubmit(onSubmit)(e);
-          }}
+          onSubmit={form.handleSubmit(onSubmit, (errors) =>
+            console.log("Validation errors:", errors)
+          )}
           className="flex flex-col space-y-6 w-full"
         >
-          <div className="flex felx-1 w-full items-center gap-5">
-            <FormField
-              control={form.control}
-              name="financial_year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Financial Year</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="text" placeholder="2024-2025" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+          <div className="flex items-center w-full gap-5">
             {/* District Select */}
             <FormField
               control={form.control}
@@ -117,7 +158,9 @@ const ImplementationAgencyForm = ({
                   <Select
                     disabled={!!initialData}
                     onValueChange={(value) =>
-                      form.setValue("district_id", value)
+                      form.setValue("district_id", value, {
+                        shouldValidate: true,
+                      })
                     }
                     value={form.watch("district_id")}
                   >
@@ -143,7 +186,7 @@ const ImplementationAgencyForm = ({
               )}
             />
 
-            {/* Block Select – dummy until API is added */}
+            {/* Block Select */}
             <FormField
               control={form.control}
               name="block_id"
@@ -151,8 +194,11 @@ const ImplementationAgencyForm = ({
                 <FormItem>
                   <FormLabel>Block</FormLabel>
                   <Select
-                    onValueChange={(value) => form.setValue("block_id", value)}
+                    onValueChange={(value) =>
+                      form.setValue("block_id", value, { shouldValidate: true })
+                    }
                     value={form.watch("block_id")}
+                    disabled={!selectedDistrict || blocksLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -160,9 +206,11 @@ const ImplementationAgencyForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white">
-                      <SelectItem value="block1">Block 1</SelectItem>
-                      <SelectItem value="block2">Block 2</SelectItem>
-                      <SelectItem value="block3">Block 3</SelectItem>
+                      {blocksData?.records?.map((b: any) => (
+                        <SelectItem key={b._id} value={b._id}>
+                          {b.block_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -170,22 +218,12 @@ const ImplementationAgencyForm = ({
               )}
             />
 
-            <FormField
+            {/* Agency Name */}
+            <TextInput
               control={form.control}
               name="agency_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Agency Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="Enter agency name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Agency Name"
+              placeholder="Enter agency name"
             />
           </div>
 

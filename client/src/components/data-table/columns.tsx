@@ -507,7 +507,8 @@ type ImplementationAgency = {
 };
 
 const getImplementationAgencyColumns = (
-  onEdit: (row: ImplementationAgency) => void
+  onEdit: (row: ImplementationAgency) => void,
+  editingRow?: ImplementationAgency | null
 ): ColumnDef<ImplementationAgency>[] => [
   {
     accessorKey: "financial_year",
@@ -540,21 +541,28 @@ const getImplementationAgencyColumns = (
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }: { row: Row<ImplementationAgency> }) => (
-      <div className="flex justify-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(row.original)}
-          className="text-green-600 hover:text-green-800"
-        >
-          <MdEditSquare size={20} />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }: { row: Row<ImplementationAgency> }) => {
+      const isEditing = editingRow?._id === row.original._id;
+
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+          </Button>
+        </div>
+      );
+    },
   },
 ];
-
 export {
   type BudgetHead,
   budgetHeadColumns,

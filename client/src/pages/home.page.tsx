@@ -1,18 +1,36 @@
 //* package imports
 import { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
-//* file imports
+//* hooks
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useEditableRow } from "@/hooks/useEditableRow";
+
+//* api services
 import { useLogoutMutation } from "@/store/services/auth.api";
 import { useGetAllBankHeadsQuery } from "@/store/services/bank-head.api";
 import { useGetAllBudgetHeadsQuery } from "@/store/services/budget-head.api";
+import { useGetAllDepartmentsQuery } from "@/store/services/department.api";
+import { useGetAllImplementationAgenciesQuery } from "@/store/services/ia.api";
+import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
 import { useFetchDistrictsQuery } from "@/store/services/location.api";
-import { clearUser } from "@/store/slices/auth-slice";
-import { type RootState } from "@/store/store";
 
+//* store/slices
+import { clearUser } from "@/store/slices/auth-slice";
+
+//* ui components
 import CardWrapper from "@/components/card-wrapper";
+import { DataTable } from "@/components/data-table/data-table";
+import BankMasterForm from "@/components/forms/bank-form";
+import BudgetHeadForm from "@/components/forms/budget-form";
+import DepartmentMasterForm from "@/components/forms/department-form";
+import ImplementationAgencyForm from "@/components/forms/ia-form";
+import ProposalForm from "@/components/forms/proposal-form";
+import PageLoader from "@/components/mini-components/page-loader";
+
+//* data table columns & types
 import {
   bankHeadColumns,
   budgetHeadColumns,
@@ -25,16 +43,6 @@ import {
   type ImplementationAgency,
   type ProposalMaster,
 } from "@/components/data-table/columns";
-import { DataTable } from "@/components/data-table/data-table";
-import BankMasterForm from "@/components/forms/bank-form";
-import BudgetHeadForm from "@/components/forms/budget-form";
-import DepartmentMasterForm from "@/components/forms/department-form";
-import ImplementationAgencyForm from "@/components/forms/ia-form";
-import ProposalForm from "@/components/forms/proposal-form";
-import PageLoader from "@/components/mini-components/page-loader";
-import { useEditableRow } from "@/hooks/useEditableRow";
-import { useGetAllDepartmentsQuery } from "@/store/services/department.api";
-import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -94,7 +102,9 @@ const getTabOptions = (roleName?: string) => {
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { user } = useCurrentUser();
+  const { data: districtsData, isLoading: districtsLoading } =
+    useFetchDistrictsQuery(user?.state_code ?? "", { skip: !user?.state_code });
 
   const TAB_OPTIONS = useMemo(() => getTabOptions(user?.role_name), [user]);
 
@@ -106,12 +116,6 @@ const HomePage = () => {
   );
   const [departmentTableData, setDepartmentTableData] = useState<Department[]>(
     []
-  );
-
-  const [selectedProposal, setSelectedProposal] =
-    useState<ProposalMaster | null>(null);
-  const [selectedIA, setSelectedIA] = useState<ImplementationAgency | null>(
-    null
   );
 
   const {
@@ -132,17 +136,21 @@ const HomePage = () => {
     cancelEdit: cancelDepartmentEdit,
   } = useEditableRow<Department>();
 
+  const {
+    editingRow: editingIA,
+    handleToggleEdit: handleIAEdit,
+    cancelEdit: cancelIAEdit,
+  } = useEditableRow<ImplementationAgency>();
+
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
   );
 
-  const handleEditIA = (row: ImplementationAgency) => setSelectedIA(row);
+  const [selectedProposal, setSelectedProposal] =
+    useState<ProposalMaster | null>(null);
   const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
-
-  const { data: districtsData, isLoading: districtsLoading } =
-    useFetchDistrictsQuery(user?.state_code ?? "", { skip: !user?.state_code });
 
   const {
     data: budgetHeadsData,
@@ -168,6 +176,12 @@ const HomePage = () => {
     error: departmentsError,
   } = useGetAllDepartmentsQuery();
 
+  const {
+    data: iaData,
+    isLoading: iaLoading,
+    error: iaError,
+  } = useGetAllImplementationAgenciesQuery();
+
   const districts = districtsData?.records || [];
 
   const processedBudgetHeads: BudgetHead[] = useMemo(
@@ -183,6 +197,7 @@ const HomePage = () => {
       })),
     [budgetHeadsData]
   );
+
   const processedBankHeads: BankDetails[] = useMemo(
     () => bankHeadsData?.records || [],
     [bankHeadsData]
@@ -202,12 +217,24 @@ const HomePage = () => {
     [departmentsData]
   );
 
+  const processedIAs: ImplementationAgency[] = useMemo(
+    () => iaData?.records || [],
+    [iaData]
+  );
+
   useEffect(() => {
     if (budgetHeadsError) console.error(budgetHeadsError);
     if (bankHeadsError) console.error(bankHeadsError);
     if (proposalsError) console.error(proposalsError);
     if (departmentsError) console.error(departmentsError);
-  }, [budgetHeadsError, bankHeadsError, proposalsError, departmentsError]);
+    if (iaError) console.error(iaError);
+  }, [
+    budgetHeadsError,
+    bankHeadsError,
+    proposalsError,
+    departmentsError,
+    iaError,
+  ]);
 
   useEffect(() => {
     if (activeTab === "budget-master") {
@@ -219,7 +246,7 @@ const HomePage = () => {
     } else if (activeTab === "department-master") {
       setDepartmentTableData(processedDepartments);
     } else if (activeTab === "ia-master") {
-      setIATableData([]);
+      setIATableData(processedIAs);
     }
   }, [
     activeTab,
@@ -227,6 +254,7 @@ const HomePage = () => {
     processedBankHeads,
     processedProposals,
     processedDepartments,
+    processedIAs,
   ]);
 
   //* logout
@@ -345,10 +373,10 @@ const HomePage = () => {
     if (activeTab === "ia-master") {
       return (
         <ImplementationAgencyForm
-          initialData={selectedIA}
-          onSuccess={() => setSelectedIA(null)}
-          districts={[]}
-          isLoading={false}
+          initialData={editingIA}
+          onSuccess={cancelIAEdit}
+          districts={districts}
+          isLoading={districtsLoading}
         />
       );
     }
@@ -399,6 +427,7 @@ const HomePage = () => {
 
     if (activeTab === "department-master") {
       if (departmentsLoading) return <PageLoader />;
+
       return (
         <DataTable
           columns={getDepartmentColumns(
@@ -413,9 +442,11 @@ const HomePage = () => {
     }
 
     if (activeTab === "ia-master") {
+      if (iaLoading) return <PageLoader />;
+
       return (
         <DataTable
-          columns={getImplementationAgencyColumns((row) => handleEditIA(row))}
+          columns={getImplementationAgencyColumns(handleIAEdit, editingIA)}
           data={iaTableData}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           showPagination
