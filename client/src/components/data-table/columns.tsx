@@ -270,7 +270,8 @@ interface ProposalMaster {
 }
 
 const getProposalColumns = (
-  onEdit: (row: ProposalMaster) => void
+  onEdit: (row: ProposalMaster) => void,
+  editingRow?: ProposalMaster | null
 ): ColumnDef<ProposalMaster>[] => [
   {
     accessorKey: "proposal_name",
@@ -316,34 +317,34 @@ const getProposalColumns = (
       <div className="text-center">{row.getValue("recommender_email")}</div>
     ),
   },
-  {
-    accessorKey: "sector_name",
-    header: () => <div className="text-center">Sector</div>,
-    cell: ({ row }) => (
-      <div className="text-center">{row.getValue("sector_name")}</div>
-    ),
-  },
-  {
-    accessorKey: "sub_sector_name",
-    header: () => <div className="text-center">Sub-Sector</div>,
-    cell: ({ row }) => (
-      <div className="text-center">
-        {row.getValue("sub_sector_name") || "—"}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "permissible_work",
-    header: () => <div className="text-center">Works</div>,
-    cell: ({ row }) => {
-      const works = row.getValue("permissible_work") as string[];
-      return (
-        <div className="text-center">
-          {works && works.length > 0 ? works.join(", ") : "—"}
-        </div>
-      );
-    },
-  },
+  // {
+  //   accessorKey: "sector_name",
+  //   header: () => <div className="text-center">Sector</div>,
+  //   cell: ({ row }) => (
+  //     <div className="text-center">{row.getValue("sector_name")}</div>
+  //   ),
+  // },
+  // {
+  //   accessorKey: "sub_sector_name",
+  //   header: () => <div className="text-center">Sub-Sector</div>,
+  //   cell: ({ row }) => (
+  //     <div className="text-center">
+  //       {row.getValue("sub_sector_name") || "—"}
+  //     </div>
+  //   ),
+  // },
+  // {
+  //   accessorKey: "permissible_work",
+  //   header: () => <div className="text-center">Works</div>,
+  //   cell: ({ row }) => {
+  //     const works = row.getValue("permissible_work") as string[];
+  //     return (
+  //       <div className="text-center">
+  //         {works && works.length > 0 ? works.join(", ") : "—"}
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: "proposal_amount",
     header: ({ column }) => (
@@ -402,18 +403,26 @@ const getProposalColumns = (
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }: { row: Row<ProposalMaster> }) => (
-      <div className="flex justify-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(row.original)}
-          className="text-green-600 hover:text-green-800"
-        >
-          <MdEditSquare size={20} />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const isEditing = editingRow?._id === row.original._id;
+
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+          </Button>
+        </div>
+      );
+    },
   },
 ];
 

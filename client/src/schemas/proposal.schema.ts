@@ -1,5 +1,4 @@
 // schemas/proposal.schema.ts
-import { LocalBodyType } from "@/interfaces/enums.interface";
 import { z } from "zod";
 
 export const WardSchema = z.object({
@@ -53,6 +52,7 @@ export const LocationSchema = z.object({
 export const ProposalFormSchema = z.object({
     district_id: z.string(),
     sector_id: z.string(),
+    department_id: z.string(),
     // permissible_works_id: z.array(zObjectId).optional(),
 
     old_work: z.boolean(),
@@ -64,11 +64,13 @@ export const ProposalFormSchema = z.object({
     recommender_email: z.email(),
     recommender_type: z.enum(["MLA", "OTHER"]),
     recommender_designation: z.string().optional(),
-    sub_sector: z.string().optional(),
 
     area_type: z.enum(["RU", "UR"]),
     proposal_name: z.string().min(1),
+    department_name: z.string(),
     sector_name: z.string().min(1),
+    sub_sector: z.string().optional(),
+    // sub_sector_name: z.string().optional(),
 
     permissible_work: z.array(z.string()).optional(),
 

@@ -131,6 +131,12 @@ const HomePage = () => {
   } = useEditableRow<BankDetails>();
 
   const {
+    editingRow: editingProposal,
+    handleToggleEdit: handleProposalEdit,
+    cancelEdit: cancelProposalEdit,
+  } = useEditableRow<ProposalMaster>();
+
+  const {
     editingRow: editingDepartment,
     handleToggleEdit: handleDepartmentEdit,
     cancelEdit: cancelDepartmentEdit,
@@ -145,10 +151,6 @@ const HomePage = () => {
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
   );
-
-  const [selectedProposal, setSelectedProposal] =
-    useState<ProposalMaster | null>(null);
-  const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -300,65 +302,63 @@ const HomePage = () => {
     if (activeTab === "proposal-master") {
       return (
         <ProposalForm
+          key={editingProposal?._id || "new"}
           initialData={
-            selectedProposal
+            editingProposal
               ? {
-                  ...selectedProposal,
+                  ...editingProposal,
                   recommender_type:
-                    selectedProposal.recommender_type === "MLA"
+                    editingProposal.recommender_type === "MLA"
                       ? "MLA"
                       : "OTHER",
-                  area_type: selectedProposal.area_type === "RU" ? "RU" : "UR",
+                  area_type: editingProposal.area_type === "RU" ? "RU" : "UR",
 
-                  // Full LocationSchema mapping
                   location: {
-                    area_type:
-                      selectedProposal.area_type === "RU" ? "RU" : "UR",
-                    district_id: selectedProposal.location?.district_id ?? "",
-                    block_id: selectedProposal.location?.block_id ?? "",
+                    area_type: editingProposal.area_type === "RU" ? "RU" : "UR",
+                    district_id: editingProposal.location?.district_id ?? "",
+                    block_id: editingProposal.location?.block_id ?? "",
                     constituency_id:
-                      selectedProposal.location?.constituency_id ?? "",
+                      editingProposal.location?.constituency_id ?? "",
                     local_body_id:
-                      selectedProposal.location?.local_body_id ?? "",
-                    panchayat_id: selectedProposal.location?.panchayat_id ?? "",
-                    ward_id: selectedProposal.location?.ward_id ?? [],
-                    village_id: selectedProposal.location?.village_id ?? [],
+                      editingProposal.location?.local_body_id ?? "",
+                    panchayat_id: editingProposal.location?.panchayat_id ?? "",
+                    ward_id: editingProposal.location?.ward_id ?? [],
+                    village_id: editingProposal.location?.village_id ?? [],
 
-                    state_code: selectedProposal.location?.state_code ?? "",
-                    state_name: selectedProposal.location?.state_name ?? "",
+                    state_code: editingProposal.location?.state_code ?? "",
+                    state_name: editingProposal.location?.state_name ?? "",
                     district_code:
-                      selectedProposal.location?.district_code ?? "",
+                      editingProposal.location?.district_code ?? "",
                     district_name:
-                      selectedProposal.location?.district_name ?? "",
-                    block_code: selectedProposal.location?.block_code ?? "",
-                    block_name: selectedProposal.location?.block_name ?? "",
+                      editingProposal.location?.district_name ?? "",
+                    block_code: editingProposal.location?.block_code ?? "",
+                    block_name: editingProposal.location?.block_name ?? "",
                     constituency_code:
-                      selectedProposal.location?.constituency_code ?? "",
+                      editingProposal.location?.constituency_code ?? "",
                     constituency_name:
-                      selectedProposal.location?.constituency_name ?? "",
+                      editingProposal.location?.constituency_name ?? "",
 
                     local_body_type_code:
-                      selectedProposal.location?.local_body_type_code ?? "",
+                      editingProposal.location?.local_body_type_code ?? "",
                     local_body_type_name:
-                      selectedProposal.location?.local_body_type_name ?? "",
+                      editingProposal.location?.local_body_type_name ?? "",
                     local_body_code:
-                      selectedProposal.location?.local_body_code ?? "",
+                      editingProposal.location?.local_body_code ?? "",
                     local_body_name:
-                      selectedProposal.location?.local_body_name ?? undefined,
+                      editingProposal.location?.local_body_name ?? undefined,
 
                     panchayat_code:
-                      selectedProposal.location?.panchayat_code ?? "",
+                      editingProposal.location?.panchayat_code ?? "",
                     panchayat_name:
-                      selectedProposal.location?.panchayat_name ?? "",
+                      editingProposal.location?.panchayat_name ?? "",
 
-                    // ✅ required arrays
-                    villages: selectedProposal.location?.villages ?? [],
-                    wards: selectedProposal.location?.wards ?? [],
+                    villages: editingProposal.location?.villages ?? [],
+                    wards: editingProposal.location?.wards ?? [],
                   },
                 }
               : null
           }
-          onSuccess={() => setSelectedProposal(null)}
+          onSuccess={cancelProposalEdit}
         />
       );
     }
@@ -421,8 +421,8 @@ const HomePage = () => {
       if (proposalsLoading) return <PageLoader />;
       return (
         <DataTable
-          columns={getProposalColumns((row) => handleEditProposal(row))}
-          data={proposalTableData}
+          columns={getProposalColumns(handleProposalEdit, editingProposal)}
+          data={processedProposals}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           showPagination
         />
