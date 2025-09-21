@@ -1,43 +1,51 @@
 //* package imports
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 //* file imports
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-
+import type { ApiError } from "@/interfaces/api-error.interface";
 import type { HeadFormProps } from "@/interfaces/master-form.interface";
+import type {
+  Department,
+  CreateDepartmentRequest,
+} from "@/interfaces/department.interface";
+
 import {
   createDepartmentSchema,
   type DepartmentFormValues,
 } from "@/schemas/department.schema";
 
-// --- Department types ---
-export type Department = {
-  _id?: string;
-  department_name: string;
-  contact_person: string;
-  contact_number: string;
-  contact_email: string;
-};
+import {
+  useCreateDepartmentMutation,
+  useUpdateDepartmentMutation,
+} from "@/store/services/department.api";
 
-// // --- form values ---
-// export type DepartmentFormValues = {
-//   department_name: string;
-//   contact_person: string;
-//   contact_number: string;
-//   contact_email: string;
-// };
+//* components
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import TextInput from "@/components/mini-components/text-input";
+
+//? helpers
+const getDefaultValues = (): DepartmentFormValues => ({
+  department_name: "",
+  contact_person: "",
+  contact_number: "",
+  contact_email: "",
+});
+
+const parsePayload = (
+  values: DepartmentFormValues
+): CreateDepartmentRequest => {
+  return {
+    ...values,
+    department_name: values.department_name ?? "",
+    contact_person: values.contact_person ?? "",
+    contact_number: values.contact_number ?? "",
+    contact_email: values.contact_email ?? "",
+  };
+};
 
 const DepartmentMasterForm = ({
   initialData,
@@ -45,32 +53,43 @@ const DepartmentMasterForm = ({
 }: HeadFormProps<Department>) => {
   const form = useForm<DepartmentFormValues>({
     resolver: zodResolver(createDepartmentSchema),
-    defaultValues: {
-      department_name: "",
-      contact_person: "",
-      contact_number: "",
-      contact_email: "",
-    },
+    defaultValues: getDefaultValues(),
   });
+
+  const [createDepartment] = useCreateDepartmentMutation();
+  const [updateDepartment] = useUpdateDepartmentMutation();
+
+  //? handler
   const onSubmit = async (values: DepartmentFormValues) => {
+    const payload = parsePayload(values);
+
     try {
       if (initialData?._id) {
-        // update dummy
-        console.log("Update Department:", initialData._id, values);
+        await updateDepartment({
+          department_id: initialData._id,
+          payload,
+        }).unwrap();
         toast.success("Department updated successfully");
       } else {
-        // create dummy
-        console.log("Create Department:", values);
+        await createDepartment(payload).unwrap();
         toast.success("Department created successfully");
       }
 
       onSuccess?.();
-      form.reset();
-    } catch {
-      toast.error("Failed to submit department");
+      form.reset(getDefaultValues());
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      toast.error(
+        apiError?.data?.error?.message ||
+          apiError?.data?.message ||
+          "Failed to submit department"
+      );
+    } finally {
+      form.reset(getDefaultValues());
     }
   };
 
+  //* hydrate form when editing
   useEffect(() => {
     if (initialData) {
       form.reset({
@@ -79,90 +98,49 @@ const DepartmentMasterForm = ({
         contact_number: initialData.contact_number ?? "",
         contact_email: initialData.contact_email ?? "",
       });
+    } else {
+      form.reset(getDefaultValues());
     }
   }, [initialData, form]);
 
   return (
-    <div className="tab-content">
+    <div className="tab-content active">
       <Form {...form}>
         <form
-          onSubmit={(e) => {
-            form.handleSubmit(onSubmit)(e);
-          }}
-          className="flex flex-col space-y-6 w-full"
+          onSubmit={form.handleSubmit(onSubmit, (errors) =>
+            console.log("Validation errors:", errors)
+          )}
+          className="flex flex-col items-center space-y-6 w-full"
         >
-          <div className="flex flex-1 w-full items-center gap-5">
-            <FormField
+          <div className="flex items-center w-full gap-5">
+            <TextInput
               control={form.control}
               name="department_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Department Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="Enter department name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Department Name"
+              placeholder="Enter department name"
             />
 
-            <FormField
+            <TextInput
               control={form.control}
               name="contact_person"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Person</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="Enter contact person"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Contact Person"
+              placeholder="Enter contact person"
             />
 
-            <FormField
+            <TextInput
               control={form.control}
               name="contact_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Number</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Enter contact number"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Contact Number"
+              placeholder="Enter contact number"
+              inputMode="numeric"
             />
 
-            <FormField
+            <TextInput
               control={form.control}
               name="contact_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="Enter contact email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Contact Email"
+              placeholder="Enter contact email"
+              type="email"
             />
           </div>
 

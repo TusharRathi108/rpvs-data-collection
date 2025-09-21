@@ -1,39 +1,40 @@
 //* package imports
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
 //* file imports
-import { type RootState } from "@/store/store";
-import { clearUser } from "@/store/slices/auth-slice";
 import { useLogoutMutation } from "@/store/services/auth.api";
-import { useFetchDistrictsQuery } from "@/store/services/location.api";
 import { useGetAllBankHeadsQuery } from "@/store/services/bank-head.api";
 import { useGetAllBudgetHeadsQuery } from "@/store/services/budget-head.api";
+import { useFetchDistrictsQuery } from "@/store/services/location.api";
+import { clearUser } from "@/store/slices/auth-slice";
+import { type RootState } from "@/store/store";
 
-import BankMasterForm from "@/components/forms/bank-form";
-import BudgetHeadForm from "@/components/forms/budget-form";
 import CardWrapper from "@/components/card-wrapper";
-import { DataTable } from "@/components/data-table/data-table";
 import {
-  budgetHeadColumns,
   bankHeadColumns,
-  type BudgetHead,
-  type BankDetails,
-  type ProposalMaster,
-  getProposalColumns,
-  type Department,
+  budgetHeadColumns,
   getDepartmentColumns,
   getImplementationAgencyColumns,
+  getProposalColumns,
+  type BankDetails,
+  type BudgetHead,
+  type Department,
   type ImplementationAgency,
+  type ProposalMaster,
 } from "@/components/data-table/columns";
-import PageLoader from "@/components/mini-components/page-loader";
-import ProposalForm from "@/components/forms/proposal-form";
-import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
+import { DataTable } from "@/components/data-table/data-table";
+import BankMasterForm from "@/components/forms/bank-form";
+import BudgetHeadForm from "@/components/forms/budget-form";
 import DepartmentMasterForm from "@/components/forms/department-form";
 import ImplementationAgencyForm from "@/components/forms/ia-form";
+import ProposalForm from "@/components/forms/proposal-form";
+import PageLoader from "@/components/mini-components/page-loader";
 import { useEditableRow } from "@/hooks/useEditableRow";
+import { useGetAllDepartmentsQuery } from "@/store/services/department.api";
+import { useGetAllProposalsQuery } from "@/store/services/proposal.api";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -106,11 +107,9 @@ const HomePage = () => {
   const [departmentTableData, setDepartmentTableData] = useState<Department[]>(
     []
   );
+
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalMaster | null>(null);
-
-  const [selectedDepartment, setSelectedDepartment] =
-    useState<Department | null>(null);
   const [selectedIA, setSelectedIA] = useState<ImplementationAgency | null>(
     null
   );
@@ -127,13 +126,18 @@ const HomePage = () => {
     cancelEdit: cancelBankEdit,
   } = useEditableRow<BankDetails>();
 
+  const {
+    editingRow: editingDepartment,
+    handleToggleEdit: handleDepartmentEdit,
+    cancelEdit: cancelDepartmentEdit,
+  } = useEditableRow<Department>();
+
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
   );
 
   const handleEditIA = (row: ImplementationAgency) => setSelectedIA(row);
   const handleEditProposal = (row: ProposalMaster) => setSelectedProposal(row);
-  const handleEditDepartment = (row: Department) => setSelectedDepartment(row);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -158,9 +162,14 @@ const HomePage = () => {
     error: proposalsError,
   } = useGetAllProposalsQuery();
 
+  const {
+    data: departmentsData,
+    isLoading: departmentsLoading,
+    error: departmentsError,
+  } = useGetAllDepartmentsQuery();
+
   const districts = districtsData?.records || [];
 
-  //? Normalize Budget Heads
   const processedBudgetHeads: BudgetHead[] = useMemo(
     () =>
       (budgetHeadsData?.records || []).map((h) => ({
@@ -174,14 +183,11 @@ const HomePage = () => {
       })),
     [budgetHeadsData]
   );
-
-  //? Normalize Bank Heads
   const processedBankHeads: BankDetails[] = useMemo(
     () => bankHeadsData?.records || [],
     [bankHeadsData]
   );
 
-  //? Normalize Proposals
   const processedProposals: ProposalMaster[] = useMemo(
     () =>
       (proposalsData?.records || []).map((p: any) => ({
@@ -191,24 +197,18 @@ const HomePage = () => {
     [proposalsData]
   );
 
-  //* Sync tableData
-  useEffect(() => {
-    if (activeTab === "budget-master") {
-      setBudgetTableData(processedBudgetHeads);
-    } else if (activeTab === "bank-master") {
-      setBankTableData(processedBankHeads);
-    } else if (activeTab === "proposal-master") {
-      setProposalTableData(processedProposals);
-    }
-  }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
+  const processedDepartments: Department[] = useMemo(
+    () => departmentsData?.records || [],
+    [departmentsData]
+  );
 
   useEffect(() => {
     if (budgetHeadsError) console.error(budgetHeadsError);
     if (bankHeadsError) console.error(bankHeadsError);
     if (proposalsError) console.error(proposalsError);
-  }, [budgetHeadsError, bankHeadsError, proposalsError]);
+    if (departmentsError) console.error(departmentsError);
+  }, [budgetHeadsError, bankHeadsError, proposalsError, departmentsError]);
 
-  //! Error handling
   useEffect(() => {
     if (activeTab === "budget-master") {
       setBudgetTableData(processedBudgetHeads);
@@ -217,57 +217,17 @@ const HomePage = () => {
     } else if (activeTab === "proposal-master") {
       setProposalTableData(processedProposals);
     } else if (activeTab === "department-master") {
-      setDepartmentTableData([
-        {
-          _id: "1",
-          department_name: "Education",
-          contact_person: "Rajesh Kumar",
-          contact_number: "9876543210",
-          contact_email: "edu@punjab.gov.in",
-        },
-        {
-          _id: "2",
-          department_name: "Health",
-          contact_person: "Meena Sharma",
-          contact_number: "9876501234",
-          contact_email: "health@punjab.gov.in",
-        },
-      ]);
+      setDepartmentTableData(processedDepartments);
     } else if (activeTab === "ia-master") {
-      setIATableData([
-        {
-          _id: "1",
-          financial_year: "2025-26",
-          district_name: "Amritsar",
-          block_name: "Majitha",
-          agency_name: "Punjab Infrastructure Dev. Corp",
-          contact_person: "Arun Verma",
-          contact_number: "9988776655",
-          contact_email: "pidc@punjab.gov.in",
-        },
-        {
-          _id: "2",
-          financial_year: "2025-26",
-          district_name: "Ludhiana",
-          block_name: "Samrala",
-          agency_name: "Punjab Rural Works Agency",
-          contact_person: "Simran Kaur",
-          contact_number: "9876543210",
-          contact_email: "simran@punjab.gov.in",
-        },
-        {
-          _id: "3",
-          financial_year: "2024-25",
-          district_name: "Patiala",
-          block_name: "Nabha",
-          agency_name: "Punjab Water Supply & Sanitation Dept.",
-          contact_person: "Harpreet Singh",
-          contact_number: "9123456780",
-          contact_email: "harpreet@punjab.gov.in",
-        },
-      ]);
+      setIATableData([]);
     }
-  }, [activeTab, processedBudgetHeads, processedBankHeads, processedProposals]);
+  }, [
+    activeTab,
+    processedBudgetHeads,
+    processedBankHeads,
+    processedProposals,
+    processedDepartments,
+  ]);
 
   //* logout
   const handleLogout = async () => {
@@ -374,8 +334,8 @@ const HomePage = () => {
     if (activeTab === "department-master") {
       return (
         <DepartmentMasterForm
-          initialData={selectedDepartment}
-          onSuccess={() => setSelectedDepartment(null)}
+          initialData={editingDepartment}
+          onSuccess={cancelDepartmentEdit}
           districts={[]}
           isLoading={false}
         />
@@ -418,6 +378,7 @@ const HomePage = () => {
             handleBankEdit,
             editingBank
           )}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           data={bankTableData}
           showPagination
         />
@@ -436,11 +397,14 @@ const HomePage = () => {
       );
     }
 
-    //! working
     if (activeTab === "department-master") {
+      if (departmentsLoading) return <PageLoader />;
       return (
         <DataTable
-          columns={getDepartmentColumns((row) => handleEditDepartment(row))}
+          columns={getDepartmentColumns(
+            handleDepartmentEdit,
+            editingDepartment
+          )}
           data={departmentTableData}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
           showPagination

@@ -438,7 +438,8 @@ type Department = {
 };
 
 const getDepartmentColumns = (
-  onEdit: (row: Department) => void
+  onEdit: (row: Department) => void,
+  editingRow?: Department | null
 ): ColumnDef<Department>[] => [
   {
     accessorKey: "department_name",
@@ -471,18 +472,26 @@ const getDepartmentColumns = (
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }: { row: Row<Department> }) => (
-      <div className="flex justify-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(row.original)}
-          className="text-green-600 hover:text-green-800"
-        >
-          <MdEditSquare size={20} />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }: { row: Row<Department> }) => {
+      const isEditing = editingRow?._id === row.original._id;
+
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+          </Button>
+        </div>
+      );
+    },
   },
 ];
 

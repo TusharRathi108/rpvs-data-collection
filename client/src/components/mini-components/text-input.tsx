@@ -22,6 +22,8 @@ interface TextInputProps<T extends FieldValues> {
   label: string;
   placeholder?: string;
   disabled?: boolean;
+  type?: React.HTMLInputTypeAttribute;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }
 
 const TextInput = <T extends FieldValues>({
@@ -30,6 +32,8 @@ const TextInput = <T extends FieldValues>({
   label,
   placeholder = "",
   disabled = false,
+  type = "text",
+  inputMode,
 }: TextInputProps<T>) => {
   const {
     field,
@@ -42,11 +46,22 @@ const TextInput = <T extends FieldValues>({
       <FormControl>
         <Input
           {...field}
-          type="text"
+          type={type}
           placeholder={placeholder}
           disabled={disabled}
-          value={field.value || ""}
-          onChange={(e) => field.onChange(e.target.value)}
+          value={field.value ? String(field.value) : ""}
+          maxLength={name === "contact_number" ? 10 : undefined}
+          inputMode={inputMode}
+          onChange={(e) => {
+            let value = e.target.value;
+
+            if (name === "contact_number") {
+              value = value.replace(/\D/g, "");
+              if (value.length > 10) value = value.slice(0, 10);
+            }
+
+            field.onChange(value);
+          }}
         />
       </FormControl>
       {error && <FormMessage>{error.message}</FormMessage>}
