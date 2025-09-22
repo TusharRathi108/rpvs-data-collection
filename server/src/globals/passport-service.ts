@@ -35,7 +35,7 @@ passport.use(
                     }).lean();
                 }
 
-                console.log("THIS IS THE DISTRICT: ", district)
+                // console.log("THIS IS THE DISTRICT: ", district)
 
                 const sessionUser: SessionUser = {
                     user_id: (typedUser._id as Types.ObjectId).toString(),
@@ -62,6 +62,8 @@ passport.use(
                         state_name: district.state_name,
                     }
                 };
+
+                // console.log(sessionUser)
 
                 return done(null, sessionUser);
             } catch (error) {

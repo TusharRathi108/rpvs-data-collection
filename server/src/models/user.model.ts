@@ -33,15 +33,15 @@ const VillageSchema = new Schema<IVillage>(
 
 const LocationSchema = new Schema<ILocation>(
     {
-        state_id: { type: Schema.ObjectId, ref: "states" },
-        district_id: { type: Schema.ObjectId, ref: "districts" },
-        block_id: { type: Schema.ObjectId, ref: "blocks" },
-        constituency_id: { type: Schema.ObjectId, ref: "constituencies" },
-        local_body_id: { type: Schema.ObjectId, ref: "local_body" },
-        panchayat_id: { type: Schema.ObjectId, ref: "panchayats" },
+        state_id: { type: Schema.ObjectId, ref: "states", default: null },
+        district_id: { type: Schema.ObjectId, ref: "districts", default: null },
+        block_id: { type: Schema.ObjectId, ref: "blocks", default: null },
+        constituency_id: { type: Schema.ObjectId, ref: "constituencies", default: null },
+        local_body_id: { type: Schema.ObjectId, ref: "local_body", default: null },
+        panchayat_id: { type: Schema.ObjectId, ref: "panchayats", default: null },
 
-        ward_id: [{ type: Types.ObjectId, ref: "local_body_ward" }],
-        village_id: [{ type: Types.ObjectId, ref: "panchayat_village" }],
+        ward_id: [{ type: Types.ObjectId, ref: "local_body_ward", default: [] }],
+        village_id: [{ type: Types.ObjectId, ref: "panchayat_village", default: [] }],
 
         state_code: { type: String, trim: true },
         state_name: { type: String, trim: true },
@@ -53,7 +53,7 @@ const LocationSchema = new Schema<ILocation>(
         area_type: { type: String, enum: Object.values(AreaType) },
 
         local_body_type_code: { type: String, trim: true },
-        local_body_type_name: { type: String, trime: true },
+        local_body_type_name: { type: String, trim: true },
         local_body_code: { type: String, trim: true },
         local_body_name: { type: String, trim: true },
 
@@ -64,7 +64,7 @@ const LocationSchema = new Schema<ILocation>(
         panchayat_name: { type: String, trim: true },
 
         wards: [WardSchema],
-        villages: [VillageSchema]
+        villages: [VillageSchema],
     },
     { _id: false }
 );

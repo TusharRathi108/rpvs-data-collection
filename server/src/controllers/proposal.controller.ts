@@ -12,6 +12,7 @@ import { handleError, successHandler } from "@/globals/response-handler.helper";
 import {
     CreateProposalSchema,
     CreateProposalDto,
+    PartialUpdateProposalSchema,
 } from "@/schemas/proposal.schema";
 import { generateProposalRef } from "@/utils/generate-reference_number";
 import { ProjectMasterModel } from "@/models/project.model";
@@ -170,7 +171,38 @@ const createProposal = async (request: Request, response: Response) => {
 
 const fetchProposalDetails = async (request: Request, response: Response) => {
     try {
-        const result = await ProposalMasterModel.find({ isDeleted: false })
+        const pipeline: PipelineStage[] = [
+            {
+                $lookup: {
+                    from: "project_progresses",
+                    let: { proposalId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$proposal_id", "$$proposalId"] },
+                            },
+                        },
+                        { $sort: { createdAt: -1 } },
+                        { $limit: 1 },
+                    ],
+                    as: "progress",
+                },
+            },
+            { $unwind: { path: "$progress", preserveNullAndEmptyArrays: true } },
+            {
+                $addFields: {
+                    assigned_ia: "$progress.assigned_ia",
+                    assigned_ia_name: "$progress.assigned_ia_name",
+                },
+            },
+            {
+                $project: {
+                    progress: 0,
+                },
+            },
+        ];
+
+        const result = await ProposalMasterModel.aggregate(pipeline)
 
         return successHandler({
             response,
@@ -242,19 +274,33 @@ const updateProposal = async (request: Request, response: Response) => {
             throwHttpException(ExceptionType.BadRequest, "Proposal ID is required");
         }
 
-        // 1. update Proposal
+        const parseResult = PartialUpdateProposalSchema.safeParse(request.body.data);
+        if (!parseResult.success) {
+            return response.status(400).json({
+                status: false,
+                message: "Validation failed",
+                errors: parseResult.error.format(),
+            });
+        }
+
+        const validatedData = parseResult.data;
+
         await ProposalMasterModel.updateOne(
             { _id: toObjectId(proposal_id), isDeleted: false },
-            { $set: { ...request.body.data, updatedBy: toObjectId(user.user_id), lastActionTakenBy: toObjectId(user.user_id) } }
+            {
+                $set: {
+                    ...validatedData,
+                    updatedBy: toObjectId(user.user_id),
+                    lastActionTakenBy: toObjectId(user.user_id),
+                },
+            }
         );
 
-        // 2. fetch updated proposal
         const updatedProposal = await ProposalMasterModel.findById(proposal_id).lean();
         if (!updatedProposal) {
             throwHttpException(ExceptionType.NotFound, "Proposal not found after update");
         }
 
-        // 3. sync changes into Project
         const projectPayload = {
             nodal_minister_id: updatedProposal.nodal_minister_id,
             sector_id: updatedProposal.sector_id,
@@ -291,7 +337,6 @@ const updateProposal = async (request: Request, response: Response) => {
             { $set: projectPayload }
         );
 
-        // 4. sync progress amounts/approvals too
         await ProjectProgressModel.updateOne(
             { proposal_id: toObjectId(proposal_id), isDeleted: false },
             {
