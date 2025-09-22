@@ -302,7 +302,7 @@ const HomePage = () => {
     if (activeTab === "proposal-master") {
       return (
         <ProposalForm
-          key={editingProposal?._id || "new"}
+          key={editingProposal?._id}
           initialData={
             editingProposal
               ? {

@@ -55,6 +55,8 @@ const LoginPage = () => {
       const result = await login(values).unwrap();
       const user = result.records;
 
+      // console.log("USER IN LOGIN FORM: ", user);
+
       dispatch(
         setUser({
           user_id: user.user_id,
@@ -65,6 +67,7 @@ const LoginPage = () => {
           state_name: "Punjab",
           district_code: user.district_code,
           district_name: user.district_name,
+          district: user.district,
         })
       );
 

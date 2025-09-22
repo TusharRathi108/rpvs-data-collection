@@ -18,6 +18,7 @@ export const VillageSchema = z.object({
 
 
 export const LocationSchema = z.object({
+    state_id: z.string().optional(),
     district_id: z.string().optional(),
     block_id: z.string().optional(),
     constituency_id: z.string().optional(),

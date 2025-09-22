@@ -1,9 +1,7 @@
 //* package imports
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@reduxjs/toolkit/query/react";
-import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
 //* ui components
@@ -25,17 +23,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { MultiSelectWithBadges } from "../mini-components/multi-select";
 
 //* schemas & types
+import { ProposalRecommenderType } from "@/interfaces/enums.interface";
 import {
   ProposalFormSchema,
   type ProposalFormValues,
 } from "@/schemas/proposal.schema";
-import { ProposalRecommenderType } from "@/interfaces/enums.interface";
-import type { RootState } from "@/store/store";
 
 //* api services
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useGetAllDepartmentsQuery } from "@/store/services/department.api";
+import { useGetImplementationAgenciesDistrictWiseQuery } from "@/store/services/ia.api";
 import {
   useFetchBlocksQuery,
   useFetchConstituenciesQuery,
@@ -47,15 +48,14 @@ import {
 } from "@/store/services/location.api";
 import { useFetchMlasQuery } from "@/store/services/mla.api";
 import {
-  useGetAllSectorsQuery,
-  useGetSubSectorWorksQuery,
-} from "@/store/services/sector.api";
-import {
   useCreateProposalMutation,
   useUpdateProposalMutation,
 } from "@/store/services/proposal.api";
-import { useGetImplementationAgenciesDistrictWiseQuery } from "@/store/services/ia.api";
-import { useGetAllDepartmentsQuery } from "@/store/services/department.api";
+import {
+  useGetAllSectorsQuery,
+  useGetSubSectorWorksQuery,
+} from "@/store/services/sector.api";
+import { useEffect } from "react";
 
 const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   district_id: "",
@@ -81,6 +81,7 @@ const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   assigned_ia: "",
   assigned_ia_name: "",
   location: {
+    state_id: "",
     area_type: "RU",
     district_code: "",
     block_code: "",
@@ -95,197 +96,61 @@ const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   },
 };
 
-const enrichLocationData = (values: ProposalFormValues, locationData: any) => {
-  const {
-    blocksData,
-    panchayatsData,
-    constituenciesData,
-    localBodiesData,
-    villagesData,
-    wardsData,
-  } = locationData;
-
-  const block = blocksData?.records.find(
-    (b: any) => b.block_code === values.location.block_code
-  );
-  const panchayat = panchayatsData?.records.find(
-    (p: any) => p.panchayat_code === values.location.panchayat_code
-  );
-  const constituency = constituenciesData?.records.find(
-    (c: any) => c.constituency_code === values.location.constituency_code
-  );
-  const localBody = localBodiesData?.records.find(
-    (lb: any) => lb.local_body_code === values.location.local_body_code
-  );
-  const villages = villagesData?.records.filter((v: any) =>
-    (values.location.village_id ?? []).includes(v._id?.toString())
-  );
-  const wards = wardsData?.records.filter((w: any) =>
-    (values.location.ward_id ?? []).includes(w._id?.toString())
-  );
-
-  const enrichedVillages =
-    villages?.map((v: any) => ({
-      panchayat_code: v.panchayat_code,
-      village_code: v.village_code,
-      village_name: v.village_name,
-      panchayat_name: v.panchayat_name,
-    })) || [];
-
-  const enrichedWards =
-    wards?.map((w: any) => ({
-      ward_code: w.ward_code,
-      ward_number: w.ward_number,
-      ward_name: w.ward_name,
-      local_body_type_code: w.local_body_type_code,
-      local_body_type_name: w.local_body_type_name,
-    })) || [];
-
-  return {
-    block,
-    panchayat,
-    constituency,
-    localBody,
-    enrichedVillages,
-    enrichedWards,
-  };
-};
-
-const buildLocationPayload = (
-  values: ProposalFormValues,
-  user: any,
-  enrichedData: any
-) => {
-  const {
-    block,
-    panchayat,
-    constituency,
-    localBody,
-    enrichedVillages,
-    enrichedWards,
-  } = enrichedData;
-
-  const baseLocation = {
-    state_id: "68c289dfcc5da75edf90bf6e",
-    state_code: user?.state_code || "",
-    state_name: user?.state_name || "",
-    district_id: user?.district?.district_id ?? "000000000000000000000000",
-    district_code: user?.district_code || "",
-    district_name: user?.district_name || "",
-    constituency_id: constituency?._id || "000000000000000000000000",
-    constituency_code: constituency?.constituency_code || "",
-    constituency_name: constituency?.constituency_name || "",
-  };
-
-  if (values.area_type === "RU") {
-    return {
-      ...values.location,
-      ...baseLocation,
-      area_type: "RU",
-      block_id: block?._id || "000000000000000000000000",
-      block_code: block?.block_code || "",
-      block_name: block?.block_name || "",
-      panchayat_id: panchayat?._id || "000000000000000000000000",
-      panchayat_code: panchayat?.panchayat_code || "",
-      panchayat_name: panchayat?.panchayat_name || "",
-      village_id: (values.location.village_id || []).map(String),
-      villages: enrichedVillages,
-      wards: [],
-      local_body_id: undefined,
-      local_body_code: undefined,
-      local_body_name: undefined,
-      local_body_type_id: undefined,
-      local_body_type_code: undefined,
-      local_body_type_name: undefined,
-      ward_id: [],
-    };
-  } else {
-    return {
-      ...values.location,
-      ...baseLocation,
-      area_type: "UR",
-      local_body_id: localBody?._id || "000000000000000000000000",
-      local_body_code: localBody?.local_body_code || "",
-      local_body_name: localBody?.local_body_name || "",
-      local_body_type_id:
-        localBody?.local_body_type_id || "000000000000000000000000",
-      local_body_type_code: localBody?.local_body_type_code || "",
-      local_body_type_name: localBody?.local_body_type_name || "",
-      ward_id: (values.location.ward_id || []).map(String),
-      wards: enrichedWards,
-      villages: [],
-      block_id: undefined,
-      block_code: undefined,
-      block_name: undefined,
-      panchayat_id: undefined,
-      panchayat_code: undefined,
-      panchayat_name: undefined,
-      village_id: [],
-    };
-  }
-};
-
 type ProposalFormProps = {
   initialData?: Partial<ProposalFormValues> | null;
   onSuccess?: () => void;
 };
 
 const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { user } = useCurrentUser();
+
+  // console.log("USER: ", user);
+
   const districtCode = user?.district_code;
   const stateCode = user?.state_code;
   const selectedDistrictId = user?.district?._id;
 
-  // console.log("INITIAL DATA: ", initialData);
+  // console.log(initialData);
 
-  const [
-    createProposal,
-    { isLoading: isCreating, isSuccess: isCreateSuccess },
-  ] = useCreateProposalMutation();
-
-  const [
-    updateProposal,
-    { isLoading: isUpdating, isSuccess: isUpdateSuccess },
-  ] = useUpdateProposalMutation();
+  const [createProposal, { isLoading: isCreating }] =
+    useCreateProposalMutation();
+  const [updateProposal, { isLoading: isUpdating }] =
+    useUpdateProposalMutation();
 
   const isEdit = !!initialData?._id;
 
-  const previousPanchayatRef = useRef<string | undefined>(undefined);
-  const previousLocalBodyRef = useRef<string | undefined>(undefined);
-  const previousSectorRef = useRef<string | undefined>(undefined);
-
-  const hasPopulatedRef = useRef(false);
-  const isPopulatingRef = useRef(false);
-  const previousLocalBodyCodeRef = useRef<string>("");
-  const previousPanchayatCodeRef = useRef<string>("");
-
-  const { data: iaData, isLoading: iaLoading } =
-    useGetImplementationAgenciesDistrictWiseQuery(
-      selectedDistrictId ? selectedDistrictId : skipToken
-    );
+  const {
+    data: iaData,
+    isLoading: iaLoading,
+    refetch: refetchIAs,
+  } = useGetImplementationAgenciesDistrictWiseQuery(
+    selectedDistrictId ?? skipToken
+  );
 
   const implementationAgencies = iaData?.records || [];
 
   const { data: deptData, isLoading: deptLoading } =
     useGetAllDepartmentsQuery();
-
   const departments = deptData?.records || [];
 
-  const form = useForm<ProposalFormValues & { _id?: string }>({
+  const form = useForm<ProposalFormValues>({
     resolver: zodResolver(ProposalFormSchema),
-    mode: "onChange",
     defaultValues: {
       ...EMPTY_FORM_VALUES,
-      district_id: user?.district?.district_id || "",
-      location: {
-        ...EMPTY_FORM_VALUES.location,
-        district_code: districtCode || "",
-      },
+      ...initialData,
+      approved_by:
+        initialData?.approved_by_dlc && initialData?.approved_by_nm
+          ? "BOTH"
+          : initialData?.approved_by_dlc
+          ? "DLC"
+          : initialData?.approved_by_nm
+          ? "NODAL_MINISTER"
+          : undefined,
     },
   });
 
-  const areaType = form.watch("area_type");
   const recommenderType = form.watch("recommender_type");
+  const areaType = form.watch("area_type");
   const blockCode = form.watch("location.block_code");
   const panchayatCode = form.watch("location.panchayat_code");
   const localBodyTypeCode = form.watch("location.local_body_type_code");
@@ -298,33 +163,22 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
       ? { state_code: stateCode, district_code: districtCode }
       : skipToken
   );
-
   const { data: constituenciesData } = useFetchConstituenciesQuery(
     stateCode && districtCode
       ? { state_code: stateCode, district_code: districtCode }
       : skipToken
   );
-
   const { data: panchayatsData } = useFetchPanchayatsQuery(
-    (blockCode || initialData?.location?.block_code) && districtCode
-      ? {
-          district_code: districtCode,
-          block_code: blockCode || initialData?.location?.block_code || "",
-        }
+    blockCode && districtCode
+      ? { district_code: districtCode, block_code: blockCode }
       : skipToken
   );
-
-  const panchayatId = form.watch("location.panchayat_id");
-
   const { data: villagesData } = useFetchVillagesQuery(
-    (panchayatId || initialData?.location?.panchayat_id) &&
-      (blockCode || initialData?.location?.block_code) &&
-      districtCode
+    panchayatCode && blockCode && districtCode
       ? {
           district_code: districtCode,
-          block_code: blockCode || initialData?.location?.block_code || "",
-          panchayat_code:
-            panchayatCode || initialData?.location?.panchayat_code || "",
+          block_code: blockCode,
+          panchayat_code: panchayatCode,
         }
       : skipToken
   );
@@ -332,39 +186,24 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const { data: localBodyTypeData } = useFetchLocalBodyTypesQuery();
 
   const { data: localBodiesData } = useFetchLocalBodiesQuery(
-    (localBodyTypeCode || initialData?.location?.local_body_type_code) &&
-      districtCode
-      ? {
-          district_code: districtCode,
-          local_body_type_code:
-            localBodyTypeCode ||
-            initialData?.location?.local_body_type_code ||
-            "",
-        }
+    localBodyTypeCode && districtCode
+      ? { district_code: districtCode, local_body_type_code: localBodyTypeCode }
       : skipToken
   );
 
   const { data: wardsData } = useFetchLocalBodyWardsQuery(
-    (localBodyTypeCode || initialData?.location?.local_body_type_code) &&
-      (localBodyCode || initialData?.location?.local_body_code) &&
-      districtCode
+    localBodyTypeCode && localBodyCode && districtCode
       ? {
           district_code: districtCode,
-          local_body_type_code:
-            localBodyTypeCode ||
-            initialData?.location?.local_body_type_code ||
-            "",
-          local_body_code:
-            localBodyCode || initialData?.location?.local_body_code || "",
+          local_body_type_code: localBodyTypeCode,
+          local_body_code: localBodyCode,
         }
       : skipToken
   );
 
   const { data: mlasData, isLoading: mlasLoading } = useFetchMlasQuery();
 
-  const { data: sectorsData, isLoading: sectorsLoading } =
-    useGetAllSectorsQuery();
-
+  const { data: sectorsData } = useGetAllSectorsQuery();
   const { data: sectorDetails } = useGetSubSectorWorksQuery(
     selectedSectorId
       ? { sector: selectedSectorId, subSector: selectedSubSector || undefined }
@@ -385,351 +224,49 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         return;
       }
 
-      if (values.recommender_type === "MLA") {
-        values.recommender_designation = "MLA";
-      } else if (values.recommender_type === "OTHER") {
-        values.recommender_designation =
-          values.recommender_designation?.trim() || "OTHER";
-      }
-
-      const locationData = {
-        blocksData,
-        panchayatsData,
-        constituenciesData,
-        localBodiesData,
-        villagesData,
-        wardsData,
-      };
-
-      const enrichedData = enrichLocationData(values, locationData);
-      const location = buildLocationPayload(values, user, enrichedData);
+      const normalizeObjectId = (val: any) => (val && val !== "" ? val : null);
 
       const payload = {
         ...values,
         recommender_contact: Number(values.recommender_contact),
-        assigned_ia: values.assigned_ia || "",
-        assigned_ia_name: values.assigned_ia_name || "",
         actionType: isEdit ? "EDITED" : "CREATED",
-        sub_sector_name: values.sub_sector?.trim() || "General",
-        location,
+        assigned_ia: normalizeObjectId(values.assigned_ia),
+        location: {
+          ...values.location,
+          state_id: "68c289dfcc5da75edf90bf6e",
+          district_id: selectedDistrictId || null,
+          block_id: normalizeObjectId(values.location.block_id),
+          panchayat_id: normalizeObjectId(values.location.panchayat_id),
+          local_body_id: normalizeObjectId(values.location.local_body_id),
+        },
       };
 
-      const { _id, ...payloadWithoutId } = payload as any;
+      const { _id, ...payloadWithoutId } = payload;
 
-      let result;
       if (isEdit) {
         const proposalId = initialData?._id || values._id;
-        if (!proposalId) {
-          console.error("❌ Missing proposal ID for update");
-          toast.error("Proposal ID missing — cannot update");
-          return;
-        }
-
-        result = await updateProposal({
-          proposal_id: proposalId,
+        await updateProposal({
+          proposal_id: proposalId || "",
           data: payloadWithoutId,
         }).unwrap();
-
         toast.success("✅ Proposal updated successfully");
       } else {
-        result = await createProposal(payloadWithoutId).unwrap();
-        toast.success(result.message || "✅ Proposal created successfully");
+        await createProposal(payloadWithoutId).unwrap();
+        toast.success("✅ Proposal created successfully");
       }
 
       form.reset();
       onSuccess?.();
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to save proposal");
-    } finally {
-      form.reset();
     }
   };
 
   useEffect(() => {
-    if (!initialData || hasPopulatedRef.current) return;
-
-    const isDataReady = {
-      constituencies: (constituenciesData?.records?.length ?? 0) > 0,
-      blocks: (blocksData?.records?.length ?? 0) > 0,
-      mlas:
-        (mlasData?.records?.length ?? 0) > 0 ||
-        initialData.recommender_type !== "MLA",
-      sectors: (sectorsData?.records?.length ?? 0) > 0,
-      departments: (departments?.length ?? 0) > 0,
-      implementationAgencies: (implementationAgencies?.length ?? 0) > 0,
-      localBodyTypes:
-        (localBodyTypeData?.records?.length ?? 0) > 0 ||
-        initialData.area_type !== "UR",
-      panchayats:
-        initialData.area_type === "RU" && initialData.location?.block_code
-          ? (panchayatsData?.records?.length ?? 0) > 0
-          : true,
-      localBodies:
-        initialData.area_type === "UR" &&
-        initialData.location?.local_body_type_code
-          ? (localBodiesData?.records?.length ?? 0) > 0
-          : true,
-    };
-
-    if (!Object.values(isDataReady).every(Boolean)) return;
-
-    isPopulatingRef.current = true;
-    const populatedData: any = { ...initialData };
-
-    // IA match
-    if (
-      initialData.assigned_ia_name &&
-      !initialData.assigned_ia &&
-      implementationAgencies.length > 0
-    ) {
-      const matched = implementationAgencies.find(
-        (ia) => ia.agency_name === initialData.assigned_ia_name
-      );
-      if (matched) {
-        populatedData.assigned_ia = matched._id;
-        populatedData.assigned_ia_name = matched.agency_name;
-      }
+    if (selectedDistrictId) {
+      refetchIAs();
     }
-
-    // Department match
-    if (
-      initialData.department_name &&
-      !initialData.department_id &&
-      departments.length > 0
-    ) {
-      const matched = departments.find(
-        (d) => d.department_name === initialData.department_name
-      );
-      if (matched) {
-        populatedData.department_id = matched._id;
-        populatedData.department_name = matched.department_name;
-      }
-    }
-
-    // Sector match
-    if (
-      initialData.sector_name &&
-      !initialData.sector_id &&
-      sectorsData?.records?.length
-    ) {
-      const matched = sectorsData.records.find(
-        (s: any) => s.sector_name === initialData.sector_name
-      );
-      if (matched) {
-        populatedData.sector_id = matched._id;
-        populatedData.sector_name = matched.sector_name;
-      }
-    }
-
-    // MLA match
-    if (
-      initialData.recommender_type === "MLA" &&
-      initialData.recommender_name &&
-      mlasData?.records?.length
-    ) {
-      const matchedMla = mlasData.records.find(
-        (mla: any) => mla.mla_name === initialData.recommender_name
-      );
-      if (matchedMla) {
-        populatedData.recommender_name = matchedMla.mla_name;
-      }
-    }
-
-    // Panchayat match
-    if (
-      initialData.area_type === "RU" &&
-      initialData.location?.panchayat_code &&
-      panchayatsData?.records?.length
-    ) {
-      const matchedPanchayat = panchayatsData.records.find(
-        (p: any) => p.panchayat_code === initialData.location?.panchayat_code
-      );
-      if (matchedPanchayat) {
-        populatedData.location = {
-          ...populatedData.location,
-          panchayat_id: matchedPanchayat._id,
-          panchayat_code: matchedPanchayat.panchayat_code,
-          panchayat_name: matchedPanchayat.panchayat_name,
-        };
-      }
-    }
-
-    previousPanchayatRef.current = initialData.location?.block_code ?? "";
-    previousPanchayatCodeRef.current =
-      initialData.location?.panchayat_code ?? "";
-    previousLocalBodyRef.current =
-      initialData.location?.local_body_type_code ?? "";
-    previousLocalBodyCodeRef.current =
-      initialData.location?.local_body_code ?? "";
-    previousSectorRef.current = initialData.sector_id ?? "";
-
-    form.reset({
-      ...populatedData,
-      _id: initialData._id,
-      district_id:
-        populatedData.district_id || user?.district?.district_id || "",
-      approved_by:
-        initialData.approved_by_dlc && initialData.approved_by_nm
-          ? "BOTH"
-          : initialData.approved_by_dlc
-          ? "DLC"
-          : initialData.approved_by_nm
-          ? "NODAL_MINISTER"
-          : undefined,
-    });
-
-    hasPopulatedRef.current = true;
-    isPopulatingRef.current = false;
-  }, [
-    initialData,
-    constituenciesData,
-    blocksData,
-    panchayatsData,
-    localBodyTypeData,
-    localBodiesData,
-    mlasData,
-    sectorsData,
-    departments,
-    implementationAgencies,
-    form,
-    user,
-  ]);
-
-  useEffect(() => {
-    if (!initialData || !hasPopulatedRef.current) return;
-    if (initialData.area_type !== "RU") return;
-    if (!villagesData?.records?.length) return;
-
-    const validVillageIds =
-      initialData.location?.villages
-        ?.map((v) => {
-          const matched = villagesData.records.find(
-            (vd: any) =>
-              vd.village_code === v.village_code ||
-              vd.village_name === v.village_name
-          );
-          return matched?._id?.toString();
-        })
-        .filter(Boolean) ?? [];
-
-    if (validVillageIds.length) {
-      form.setValue("location.village_id", validVillageIds, {
-        shouldDirty: false,
-      });
-    }
-  }, [initialData, villagesData, form]);
-
-  useEffect(() => {
-    if (!initialData || !hasPopulatedRef.current) return;
-    if (initialData.area_type !== "UR") return;
-    if (!wardsData?.records?.length) return;
-
-    const validWardIds =
-      initialData.location?.wards
-        ?.map((w) => {
-          const matched = wardsData.records.find(
-            (wd: any) =>
-              wd.ward_code === w.ward_code || wd.ward_name === w.ward_name
-          );
-          return matched?._id?.toString();
-        })
-        .filter(Boolean) ?? [];
-
-    if (validWardIds.length) {
-      form.setValue("location.ward_id", validWardIds, { shouldDirty: false });
-    }
-  }, [initialData, wardsData, form]);
-
-  useEffect(() => {
-    if (!initialData) {
-      form.reset({
-        ...EMPTY_FORM_VALUES,
-        district_id: user?.district?.district_id || "",
-        location: {
-          ...EMPTY_FORM_VALUES.location,
-          district_code: districtCode || "",
-        },
-      });
-      hasPopulatedRef.current = false;
-      isPopulatingRef.current = false;
-      previousPanchayatRef.current = "";
-      previousPanchayatCodeRef.current = "";
-      previousLocalBodyRef.current = "";
-      previousLocalBodyCodeRef.current = "";
-      previousSectorRef.current = "";
-    }
-  }, [initialData?._id]);
-
-  useEffect(() => {
-    if (isCreateSuccess || isUpdateSuccess) {
-      form.reset({
-        ...EMPTY_FORM_VALUES,
-        district_id: user?.district?.district_id || "",
-        location: {
-          ...EMPTY_FORM_VALUES.location,
-          district_code: districtCode || "",
-        },
-      });
-      hasPopulatedRef.current = false;
-      isPopulatingRef.current = false;
-      onSuccess?.();
-    }
-  }, [isCreateSuccess, isUpdateSuccess, form, onSuccess, user, districtCode]);
-
-  useEffect(() => {
-    if (!blockCode || blockCode === previousPanchayatRef.current) return;
-    if (hasPopulatedRef.current && !isPopulatingRef.current) {
-      form.setValue("location.panchayat_id", "");
-      form.setValue("location.panchayat_code", "");
-      form.setValue("location.panchayat_name", "");
-      form.setValue("location.village_id", []);
-    }
-    previousPanchayatRef.current = blockCode;
-  }, [blockCode, form]);
-
-  useEffect(() => {
-    if (!panchayatCode || panchayatCode === previousPanchayatCodeRef.current)
-      return;
-    if (hasPopulatedRef.current && !isPopulatingRef.current) {
-      form.setValue("location.village_id", []);
-    }
-    previousPanchayatCodeRef.current = panchayatCode;
-  }, [panchayatCode, form]);
-
-  useEffect(() => {
-    if (
-      !localBodyTypeCode ||
-      localBodyTypeCode === previousLocalBodyRef.current
-    )
-      return;
-    if (hasPopulatedRef.current && !isPopulatingRef.current) {
-      form.setValue("location.local_body_code", "");
-      form.setValue("location.local_body_name", "");
-      form.setValue("location.local_body_id", "");
-      form.setValue("location.ward_id", []);
-    }
-    previousLocalBodyRef.current = localBodyTypeCode;
-    previousLocalBodyCodeRef.current = "";
-  }, [localBodyTypeCode, form]);
-
-  useEffect(() => {
-    if (!localBodyCode || localBodyCode === previousLocalBodyCodeRef.current)
-      return;
-    if (hasPopulatedRef.current && !isPopulatingRef.current) {
-      form.setValue("location.ward_id", []);
-    }
-    previousLocalBodyCodeRef.current = localBodyCode;
-  }, [localBodyCode, form]);
-
-  useEffect(() => {
-    if (!selectedSectorId || selectedSectorId === previousSectorRef.current)
-      return;
-    if (hasPopulatedRef.current && !isPopulatingRef.current) {
-      form.setValue("sub_sector", "");
-      form.setValue("permissible_work", []);
-    }
-    previousSectorRef.current = selectedSectorId;
-  }, [selectedSectorId, form]);
+  }, [selectedDistrictId, refetchIAs]);
 
   return (
     <Form {...form}>
@@ -953,20 +490,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
           <FormField
             control={form.control}
-            name="proposal_name"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Proposal Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter proposal name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="proposal_amount"
             render={({ field }) => (
               <FormItem>
@@ -989,6 +512,20 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="proposal_name"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>Proposal Name</FormLabel>
+              <FormControl>
+                <Textarea {...field} placeholder="Enter proposal name" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Location Fields */}
         <div className="flex items-center gap-5 w-full">
@@ -1033,11 +570,26 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   <FormItem>
                     <FormLabel>Block</FormLabel>
                     <Select
-                      onValueChange={(val) =>
+                      onValueChange={(val) => {
+                        // set block
                         form.setValue("location.block_code", val, {
                           shouldDirty: true,
-                        })
-                      }
+                        });
+
+                        // reset dependent fields
+                        form.setValue("location.panchayat_id", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.panchayat_code", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.panchayat_name", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.village_id", [], {
+                          shouldDirty: true,
+                        });
+                      }}
                       value={field.value || ""}
                     >
                       <SelectTrigger>
@@ -1054,6 +606,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="location.panchayat_id"
@@ -1078,6 +631,11 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                           selected?.panchayat_name || "",
                           { shouldDirty: true }
                         );
+
+                        // reset villages
+                        form.setValue("location.village_id", [], {
+                          shouldDirty: true,
+                        });
                       }}
                       value={field.value || ""}
                     >
@@ -1085,21 +643,11 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         <SelectValue placeholder="Select Panchayat" />
                       </SelectTrigger>
                       <SelectContent>
-                        {panchayatsData?.records?.length
-                          ? panchayatsData.records.map((p: any) => (
-                              <SelectItem key={p._id} value={p._id}>
-                                {p.panchayat_name}
-                              </SelectItem>
-                            ))
-                          : initialData?.location?.panchayat_id && (
-                              <SelectItem
-                                key={initialData.location.panchayat_id}
-                                value={initialData.location.panchayat_id}
-                              >
-                                {initialData.location.panchayat_name ||
-                                  "Unknown Panchayat"}
-                              </SelectItem>
-                            )}
+                        {panchayatsData?.records?.map((p: any) => (
+                          <SelectItem key={p._id} value={p._id}>
+                            {p.panchayat_name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -1148,11 +696,25 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   <FormItem>
                     <FormLabel>Local Body Type</FormLabel>
                     <Select
-                      onValueChange={(val) =>
+                      onValueChange={(val) => {
                         form.setValue("location.local_body_type_code", val, {
                           shouldDirty: true,
-                        })
-                      }
+                        });
+
+                        // reset dependent
+                        form.setValue("location.local_body_code", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.local_body_name", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.local_body_id", "", {
+                          shouldDirty: true,
+                        });
+                        form.setValue("location.ward_id", [], {
+                          shouldDirty: true,
+                        });
+                      }}
                       value={field.value || ""}
                     >
                       <SelectTrigger>
@@ -1172,6 +734,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="location.local_body_code"
@@ -1183,31 +746,27 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         const selected = localBodiesData?.records.find(
                           (lb: any) => lb.local_body_code === val
                         );
-                        form.setValue(
-                          "location.local_body_code",
-                          selected?.local_body_code || "",
-                          { shouldDirty: true }
-                        );
-                        form.setValue(
-                          "location.local_body_name",
-                          selected?.local_body_name || "",
-                          { shouldDirty: true }
-                        );
-                        form.setValue(
-                          "location.local_body_type_code",
-                          selected?.local_body_type_code || "",
-                          { shouldDirty: true }
-                        );
-                        form.setValue(
-                          "location.local_body_type_name",
-                          selected?.local_body_type_name || "",
-                          { shouldDirty: true }
-                        );
-                        form.setValue(
-                          "location.local_body_id",
-                          selected?._id || "000000000000000000000000",
-                          { shouldDirty: true }
-                        );
+                        if (selected) {
+                          form.setValue(
+                            "location.local_body_code",
+                            selected.local_body_code,
+                            { shouldDirty: true }
+                          );
+                          form.setValue(
+                            "location.local_body_name",
+                            selected.local_body_name,
+                            { shouldDirty: true }
+                          );
+                          form.setValue(
+                            "location.local_body_id",
+                            selected._id.toString(),
+                            { shouldDirty: true }
+                          );
+                        }
+                        // reset wards
+                        form.setValue("location.ward_id", [], {
+                          shouldDirty: true,
+                        });
                       }}
                       value={field.value || ""}
                     >
@@ -1216,10 +775,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {localBodiesData?.records?.map((lb: any) => (
-                          <SelectItem
-                            key={lb.local_body_code}
-                            value={lb.local_body_code}
-                          >
+                          <SelectItem key={lb._id} value={lb.local_body_code}>
                             {lb.local_body_name}
                           </SelectItem>
                         ))}
@@ -1324,24 +880,24 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     form.setValue("sector_name", selected?.sector_name || "", {
                       shouldDirty: true,
                     });
+
+                    // reset sub-sector & works
+                    form.setValue("sub_sector", "", { shouldDirty: true });
+                    form.setValue("permissible_work", [], {
+                      shouldDirty: true,
+                    });
                   }}
                   value={field.value || ""}
                 >
-                  <SelectTrigger className="w-[200px] truncate">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select Sector" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sectorsLoading ? (
-                      <SelectItem value="__loading" disabled>
-                        Loading sectors...
+                    {sectorsData?.records?.map((s: any) => (
+                      <SelectItem key={s._id} value={s._id}>
+                        {s.sector_name}
                       </SelectItem>
-                    ) : (
-                      sectorsData?.records?.map((s: any) => (
-                        <SelectItem key={s._id} value={s._id}>
-                          {s.sector_name}
-                        </SelectItem>
-                      ))
-                    )}
+                    ))}
                   </SelectContent>
                 </Select>
               </FormItem>
@@ -1351,46 +907,36 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           <FormField
             control={form.control}
             name="sub_sector"
-            render={({ field }) => {
-              const rawSubSectors =
-                sectorDetails?.records?.[0]?.sub_sectors ?? [];
-              const subSectors = Array.isArray(rawSubSectors)
-                ? rawSubSectors
-                : rawSubSectors
-                ? [rawSubSectors]
-                : [];
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sub-Sector</FormLabel>
+                <Select
+                  onValueChange={(val) => {
+                    form.setValue("sub_sector", val, { shouldDirty: true });
 
-              return (
-                <FormItem>
-                  <FormLabel>Sub-Sector</FormLabel>
-                  <Select
-                    onValueChange={(val) => {
-                      form.setValue("sub_sector", val, { shouldDirty: true });
-                      form.setValue("permissible_work", []);
-                    }}
-                    value={field.value || ""}
-                    disabled={subSectors.length === 0}
-                  >
-                    <SelectTrigger className="w-[150px] truncate">
-                      <SelectValue
-                        placeholder={
-                          subSectors.length > 0
-                            ? "Select Sub-Sector"
-                            : "No Sub-Sectors"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subSectors.map((ss: string) => (
+                    // reset works
+                    form.setValue("permissible_work", [], {
+                      shouldDirty: true,
+                    });
+                  }}
+                  value={field.value || ""}
+                  disabled={!sectorDetails?.records?.[0]?.sub_sectors?.length}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Sub-Sector" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sectorDetails?.records?.[0]?.sub_sectors?.map(
+                      (ss: string) => (
                         <SelectItem key={ss} value={ss}>
                           {ss}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              );
-            }}
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
           />
 
           <FormField

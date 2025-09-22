@@ -7,10 +7,11 @@ import { RouterProvider } from "react-router";
 import { Toaster } from "sonner";
 import rootRouter from "@/routes/root.route";
 import { setUser } from "@/store/slices/auth-slice";
+// import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const App = () => {
   const dispatch = useDispatch();
-  // const user = useSelector((state: RootState) => state.auth.user);
+  // const { user } = useCurrentUser();
   const [sessionChecked, setSessionChecked] = useState(false);
 
   // console.log("First Log: ", user);
