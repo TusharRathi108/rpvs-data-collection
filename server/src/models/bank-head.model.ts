@@ -16,7 +16,6 @@ const bankMasterSchema = new Schema<BankMasterDocument>(
         agency_id: {
             type: Schema.Types.ObjectId,
             ref: "implementation_agency",
-            required: true,
         },
         district_code: {
             type: String,

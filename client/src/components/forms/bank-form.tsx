@@ -221,7 +221,7 @@ const BankMasterForm = ({
                 label: district.district_name,
                 ...district,
               }))}
-              disabled={!!initialData || !!userDistrictId}
+              disabled={role_name === "District"}
               isLoading={isLoading}
               placeholder="Select District"
               fallbackLabel={

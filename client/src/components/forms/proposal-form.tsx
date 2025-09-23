@@ -103,21 +103,18 @@ type ProposalFormProps = {
 
 const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const { user } = useCurrentUser();
-
-  // console.log("USER: ", user);
-
-  const districtCode = user?.district_code;
+  const isEdit = !!initialData?._id;
   const stateCode = user?.state_code;
+  const districtCode = user?.district_code;
   const selectedDistrictId = user?.district?._id;
 
+  // console.log("USER: ", user);
   // console.log(initialData);
 
   const [createProposal, { isLoading: isCreating }] =
     useCreateProposalMutation();
   const [updateProposal, { isLoading: isUpdating }] =
     useUpdateProposalMutation();
-
-  const isEdit = !!initialData?._id;
 
   const {
     data: iaData,
@@ -158,21 +155,24 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const selectedSectorId = form.watch("sector_id");
   const selectedSubSector = form.watch("sub_sector");
 
-  const { data: blocksData } = useFetchBlocksQuery(
-    stateCode && districtCode
-      ? { state_code: stateCode, district_code: districtCode }
-      : skipToken
-  );
   const { data: constituenciesData } = useFetchConstituenciesQuery(
     stateCode && districtCode
       ? { state_code: stateCode, district_code: districtCode }
       : skipToken
   );
+
+  const { data: blocksData } = useFetchBlocksQuery(
+    stateCode && districtCode
+      ? { state_code: stateCode, district_code: districtCode }
+      : skipToken
+  );
+
   const { data: panchayatsData } = useFetchPanchayatsQuery(
     blockCode && districtCode
       ? { district_code: districtCode, block_code: blockCode }
       : skipToken
   );
+
   const { data: villagesData } = useFetchVillagesQuery(
     panchayatCode && blockCode && districtCode
       ? {
@@ -204,17 +204,26 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const { data: mlasData, isLoading: mlasLoading } = useFetchMlasQuery();
 
   const { data: sectorsData } = useGetAllSectorsQuery();
+
   const { data: sectorDetails } = useGetSubSectorWorksQuery(
     selectedSectorId
       ? { sector: selectedSectorId, subSector: selectedSubSector || undefined }
       : skipToken
   );
 
-  const permissibleWorksOptions =
-    sectorDetails?.records?.[0]?.works?.map((w: string) => ({
-      value: w,
-      label: w,
-    })) || [];
+  const rawSubSectors = sectorDetails?.records?.[0]?.sub_sectors;
+  const subSectors = Array.isArray(rawSubSectors)
+    ? rawSubSectors
+    : rawSubSectors
+    ? [rawSubSectors]
+    : [];
+
+  const rawWorks = sectorDetails?.records?.[0]?.works;
+  const permissibleWorksOptions = Array.isArray(rawWorks)
+    ? rawWorks.map((w: string) => ({ value: w, label: w }))
+    : rawWorks
+    ? [{ value: rawWorks, label: rawWorks }]
+    : [];
 
   const onSubmit = async (values: ProposalFormValues) => {
     try {
@@ -914,25 +923,23 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   onValueChange={(val) => {
                     form.setValue("sub_sector", val, { shouldDirty: true });
 
-                    // reset works
+                    // reset works when sub_sector changes
                     form.setValue("permissible_work", [], {
                       shouldDirty: true,
                     });
                   }}
                   value={field.value || ""}
-                  disabled={!sectorDetails?.records?.[0]?.sub_sectors?.length}
+                  disabled={subSectors.length === 0} // ✅ safer
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Sub-Sector" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sectorDetails?.records?.[0]?.sub_sectors?.map(
-                      (ss: string) => (
-                        <SelectItem key={ss} value={ss}>
-                          {ss}
-                        </SelectItem>
-                      )
-                    )}
+                    {subSectors.map((ss: string) => (
+                      <SelectItem key={ss} value={ss}>
+                        {ss}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </FormItem>
@@ -943,14 +950,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             control={form.control}
             name="permissible_work"
             render={({ field }) => {
-              const rawSubSectors =
-                sectorDetails?.records?.[0]?.sub_sectors ?? [];
-              const subSectors = Array.isArray(rawSubSectors)
-                ? rawSubSectors
-                : rawSubSectors
-                ? [rawSubSectors]
-                : [];
-
               const hasSubSectors = subSectors.length > 0;
               const isSectorSelected = !!selectedSectorId;
               const isSubSectorSelected = !!selectedSubSector;

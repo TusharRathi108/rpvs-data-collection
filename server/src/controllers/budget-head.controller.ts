@@ -189,6 +189,7 @@ const updateBudgetHead = async (request: Request, response: Response) => {
 
         const payloadWithAudit = {
             ...parsedPayload,
+            sanction_number: parsedPayload.sanction_reference_number,
             updatedBy: toObjectId(user?.user_id),
             lastActionTakenBy: toObjectId(user?.user_id),
         };

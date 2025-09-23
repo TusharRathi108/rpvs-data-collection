@@ -7,7 +7,10 @@ const getBankHeadBaseSchema = (role_name: string) =>
         agency_id:
             role_name === "District"
                 ? z.string().trim().min(1, "Agency ID is required")
-                : z.string().trim().optional(),
+                : z.string()
+                    .trim()
+                    .transform((val) => (val === "" ? undefined : val))
+                    .optional(),
         district_code: z.string().trim().min(1, "District code is required"),
         district_name: z.string().trim().min(1, "District name is required"),
 
@@ -16,7 +19,10 @@ const getBankHeadBaseSchema = (role_name: string) =>
         agency_name:
             role_name === "District"
                 ? z.string().trim().min(1, "Agency name is required")
-                : z.string().trim().optional(),
+                : z.string()
+                    .trim()
+                    .transform((val) => (val === "" ? undefined : val))
+                    .optional(),
 
         bank_name: z.string().trim().min(1, "Bank name is required"),
         account_number: z

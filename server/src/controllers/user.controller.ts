@@ -9,6 +9,8 @@ import { UserModel } from "@/models/user.model";
 import { CreateUserSchema } from "@/schemas/user.schema";
 import { handleError, successHandler } from "@/globals/response-handler.helper"
 import { ExceptionType, throwHttpException } from "@/utils/http-exception";
+import { SessionUser } from "@/types/session-user";
+import { ConstituencyModel } from "@/models/location-models/constituency.model";
 
 const createUserController = async (request: Request, response: Response) => {
     try {
@@ -41,7 +43,22 @@ const createUserController = async (request: Request, response: Response) => {
 
 const fetchMla = async (request: Request, response: Response) => {
     try {
-        const result = await MlaModel.find()
+        const { district_code } = request.user as SessionUser
+
+        const constituencies = await ConstituencyModel.find(
+            { district_code: district_code },
+            { constituency_code: 1, constituency_name: 1, _id: 0 }
+        ).lean();
+
+        const constituencyCodes = constituencies.map(
+            (c) => c.constituency_code
+        );
+
+        const result = await MlaModel.find({
+            constituency_code: { $in: constituencyCodes },
+        }).lean();
+
+        // const result = await MlaModel.find()
 
         return successHandler({
             response,
