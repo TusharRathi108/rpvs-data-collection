@@ -39,6 +39,9 @@ const projectMasterSchema = new Schema<ProjectMasterDocument>(
             },
         ],
 
+        department_id: {type: Schema.Types.ObjectId, ref: 'department', trim: true, required: true},
+        department_name: { type: String, trim: true, required: true },
+
         nodal_minister: { type: String, trim: true },
 
         reference_number: { type: String, unique: true, trim: true },

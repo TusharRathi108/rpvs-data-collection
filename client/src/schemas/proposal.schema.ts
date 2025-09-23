@@ -62,7 +62,9 @@ export const ProposalFormSchema = z.object({
 
     recommender_name: z.string().min(1),
     recommender_contact: z.number(),
-    recommender_email: z.email(),
+    recommender_email: z
+    .union([z.email({ message: "Invalid email" }), z.literal("")])
+    .optional(),
     recommender_type: z.enum(["MLA", "OTHER"]),
     recommender_designation: z.string().optional(),
 

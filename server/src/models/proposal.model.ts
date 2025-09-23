@@ -25,6 +25,8 @@ const proposalMasterSchema = new Schema<ProposalMasterDocument>(
                 ref: "permissible_work",
             },
         ],
+        department_id: {type: Schema.Types.ObjectId, ref: 'department', trim: true, required: true},
+        department_name: { type: String, trim: true, required: true },
 
         old_work: { type: Boolean, trim: true, default: false },
         nodal_minister: { type: String, trim: true },
@@ -33,7 +35,7 @@ const proposalMasterSchema = new Schema<ProposalMasterDocument>(
 
         recommender_name: { type: String, required: true, trim: true },
         recommender_contact: { type: Number, required: true },
-        recommender_email: { type: String, required: true, lowercase: true, trim: true },
+        recommender_email: { type: String, lowercase: true, trim: true },
         recommender_type: { type: String, enum: Object.values(ProposalRecommenderType) },
         recommender_designation: { type: String, trim: true },
 

@@ -10,6 +10,8 @@ const ProposalBaseSchema = z.object({
     nodal_minister_id: zObjectId.optional(),
     sector_id: zObjectId,
     permissible_works_id: z.array(zObjectId).optional(),
+    department_id: zObjectId,
+    department_name: z.string(),
 
     // old_work: z.boolean().optional(),
     nodal_minister: z.string().trim().optional(),
@@ -18,14 +20,14 @@ const ProposalBaseSchema = z.object({
 
     recommender_name: z.string().trim().min(1),
     recommender_contact: z.number().nonnegative(),
-    recommender_email: z.email(),
+    recommender_email: z.email().optional(),
     recommender_type: z.enum(ProposalRecommenderType),
     recommender_designation: z.string().trim().optional(),
 
     area_type: z.enum(AreaType),
     proposal_name: z.string().trim().min(1),
     sector_name: z.string().trim().min(1),
-    sub_sector_name: z.string().trim().min(1),
+    // sub_sector_name: z.string().trim().min(1),
 
     permissible_work: z.array(z.string().trim()).optional(),
 

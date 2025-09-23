@@ -110,6 +110,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
   // console.log("USER: ", user);
   // console.log(initialData);
+  console.log(districtCode)
 
   const [createProposal, { isLoading: isCreating }] =
     useCreateProposalMutation();
@@ -143,6 +144,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           : initialData?.approved_by_nm
           ? "NODAL_MINISTER"
           : undefined,
+      location: {
+        ...EMPTY_FORM_VALUES.location,
+        ...initialData?.location,
+        district_code: districtCode ? String(districtCode) : "", 
+        district_name: user?.district_name || "", 
+      },
     },
   });
 
@@ -227,6 +234,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
   const onSubmit = async (values: ProposalFormValues) => {
     try {
+      console.log(values)
       const isValid = await form.trigger();
       if (!isValid) {
         toast.error("Please fix the form errors before submitting");
@@ -243,12 +251,59 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         location: {
           ...values.location,
           state_id: "68c289dfcc5da75edf90bf6e",
-          district_id: selectedDistrictId || null,
-          block_id: normalizeObjectId(values.location.block_id),
-          panchayat_id: normalizeObjectId(values.location.panchayat_id),
-          local_body_id: normalizeObjectId(values.location.local_body_id),
+          state_code: user?.state_code || "",
+          state_name: user?.state_name || "",
+          district_id: selectedDistrictId || "",
+          district_code: user?.district_code || "",
+          district_name: user?.district_name || "",
+          constituency_id: values.location.constituency_id,
+
+          ...(values.area_type === "RU"
+            ? {
+                // keep rural fields
+                block_id: values.location.block_id,
+                block_code: values.location.block_code,
+                block_name: values.location.block_name,
+                panchayat_id: values.location.panchayat_id,
+                panchayat_code: values.location.panchayat_code,
+                panchayat_name: values.location.panchayat_name,
+                village_id: values.location.village_id ?? [],
+                villages: values.location.villages ?? [],
+
+                // reset urban fields
+                local_body_id: "",
+                local_body_code: "",
+                local_body_name: "",
+                local_body_type_code: "",
+                local_body_type_name: "",
+                ward_id: [],
+                wards: [],
+              }
+            : {
+                // keep urban fields
+                local_body_id: values.location.local_body_id,
+                local_body_code: values.location.local_body_code,
+                local_body_name: values.location.local_body_name,
+                local_body_type_code: values.location.local_body_type_code,
+                local_body_type_name: values.location.local_body_type_name,
+                ward_id: values.location.ward_id ?? [],
+                wards: values.location.wards ?? [],
+
+                // reset rural fields
+                block_id: "",
+                block_code: "",
+                block_name: "",
+                panchayat_id: "",
+                panchayat_code: "",
+                panchayat_name: "",
+                village_id: [],
+                villages: [],
+              }),
         },
       };
+
+
+      // console.log(payload)
 
       const { _id, ...payloadWithoutId } = payload;
 
@@ -285,9 +340,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           console.log("Form submit event triggered");
 
           form.trigger().then((isValid) => {
-            // console.log("Form is valid:", isValid);
+            console.log("Form is valid:", isValid);
             if (!isValid) {
-              // console.error("Validation failed:", form.formState.errors);
+              console.error("Validation failed:", form.formState.errors);
               toast.error("Please fix form errors before submitting");
             } else {
               form.handleSubmit(onSubmit, (errors) => {
@@ -545,11 +600,13 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               <FormItem>
                 <FormLabel>Constituency</FormLabel>
                 <Select
-                  onValueChange={(val) =>
-                    form.setValue("location.constituency_code", val, {
-                      shouldDirty: true,
-                    })
-                  }
+                  // Constituency
+                  onValueChange={(val) => {
+                    const selected = constituenciesData?.records.find((c: any) => c.constituency_code === val);
+                    form.setValue("location.constituency_id", selected?._id || "");
+                    form.setValue("location.constituency_code", selected?.constituency_code || "");
+                    form.setValue("location.constituency_name", selected?.constituency_name || "");
+                  }}
                   value={field.value || ""}
                 >
                   <SelectTrigger>
@@ -572,49 +629,50 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
           {areaType === "RU" && (
             <>
-              <FormField
-                control={form.control}
-                name="location.block_code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Block</FormLabel>
-                    <Select
-                      onValueChange={(val) => {
-                        // set block
-                        form.setValue("location.block_code", val, {
-                          shouldDirty: true,
-                        });
+                <FormField
+                  control={form.control}
+                  name="location.block_id" // 👈 bind to _id instead
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Block</FormLabel>
+                      <Select
+                        onValueChange={(val) => {
+                          const selected = blocksData?.records.find((b: any) => b._id === val);
 
-                        // reset dependent fields
-                        form.setValue("location.panchayat_id", "", {
-                          shouldDirty: true,
-                        });
-                        form.setValue("location.panchayat_code", "", {
-                          shouldDirty: true,
-                        });
-                        form.setValue("location.panchayat_name", "", {
-                          shouldDirty: true,
-                        });
-                        form.setValue("location.village_id", [], {
-                          shouldDirty: true,
-                        });
-                      }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Block" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {blocksData?.records?.map((b: any) => (
-                          <SelectItem key={b.block_code} value={b.block_code}>
-                            {b.block_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+                          form.setValue("location.block_id", selected?._id || "", {
+                            shouldDirty: true,
+                          });
+                          form.setValue("location.block_code", selected?.block_code || "", {
+                            shouldDirty: true,
+                          });
+                          form.setValue("location.block_name", selected?.block_name || "", {
+                            shouldDirty: true,
+                          });
+
+                          // reset dependent fields
+                          form.setValue("location.panchayat_id", "", { shouldDirty: true });
+                          form.setValue("location.panchayat_code", "", { shouldDirty: true });
+                          form.setValue("location.panchayat_name", "", { shouldDirty: true });
+                          form.setValue("location.village_id", [], { shouldDirty: true });
+
+                          field.onChange(selected?._id || ""); // keep RHF in sync
+                        }}
+                        value={field.value || ""}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Block" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {blocksData?.records?.map((b: any) => (
+                            <SelectItem key={b._id} value={b._id}>
+                              {b.block_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
               <FormField
                 control={form.control}
@@ -678,13 +736,22 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       <MultiSelectWithBadges
                         options={options}
                         values={(field.value || []).filter(Boolean)}
-                        onChange={(vals) =>
-                          form.setValue(
-                            "location.village_id",
-                            vals.filter(Boolean),
-                            { shouldDirty: true }
-                          )
-                        }
+                        onChange={(vals) => {
+                          form.setValue("location.village_id", vals.filter(Boolean), { shouldDirty: true });
+
+                          const selectedVillages = villagesData?.records
+                            ?.filter((v: any) => vals.includes(v._id.toString()))
+                            .map((v: any) => ({
+                              _id: v._id.toString(),
+                              village_code: v.village_code,
+                              village_name: v.village_name,
+                              panchayat_code: v.panchayat_code,
+                              panchayat_name: v.panchayat_name,
+                            })) || [];
+
+                          form.setValue("location.villages", selectedVillages, { shouldDirty: true });
+                        }}
+
                         placeholder="Select Villages"
                         badgeColor="bg-blue-500"
                         badgeClassName="w-[150px] truncate"
@@ -746,36 +813,24 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
               <FormField
                 control={form.control}
-                name="location.local_body_code"
+                name="location.local_body_id" 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Local Body</FormLabel>
                     <Select
                       onValueChange={(val) => {
                         const selected = localBodiesData?.records.find(
-                          (lb: any) => lb.local_body_code === val
+                          (lb: any) => lb._id.toString() === val
                         );
                         if (selected) {
-                          form.setValue(
-                            "location.local_body_code",
-                            selected.local_body_code,
-                            { shouldDirty: true }
-                          );
-                          form.setValue(
-                            "location.local_body_name",
-                            selected.local_body_name,
-                            { shouldDirty: true }
-                          );
-                          form.setValue(
-                            "location.local_body_id",
-                            selected._id.toString(),
-                            { shouldDirty: true }
-                          );
+                          form.setValue("location.local_body_id", selected._id.toString(), { shouldDirty: true });
+                          form.setValue("location.local_body_code", selected.local_body_code, { shouldDirty: true });
+                          form.setValue("location.local_body_name", selected.local_body_name, { shouldDirty: true });
+                          form.setValue("location.local_body_type_code", selected.local_body_type_code, { shouldDirty: true });
+                          form.setValue("location.local_body_type_name", selected.local_body_type_name, { shouldDirty: true });
                         }
-                        // reset wards
-                        form.setValue("location.ward_id", [], {
-                          shouldDirty: true,
-                        });
+                        form.setValue("location.ward_id", [], { shouldDirty: true });
+                        field.onChange(val); // keep RHF synced
                       }}
                       value={field.value || ""}
                     >
@@ -784,7 +839,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {localBodiesData?.records?.map((lb: any) => (
-                          <SelectItem key={lb._id} value={lb.local_body_code}>
+                          <SelectItem key={lb._id} value={lb._id.toString()}>
                             {lb.local_body_name}
                           </SelectItem>
                         ))}
@@ -793,6 +848,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="location.ward_id"
@@ -807,15 +863,22 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                         })) || []
                       }
                       values={(field.value || []).filter(Boolean)}
-                      onChange={(vals) =>
-                        form.setValue(
-                          "location.ward_id",
-                          vals.filter(Boolean),
-                          {
-                            shouldDirty: true,
-                          }
-                        )
-                      }
+                      onChange={(vals) => {
+                        form.setValue("location.ward_id", vals.filter(Boolean), { shouldDirty: true });
+
+                        const selectedWards = wardsData?.records
+                          ?.filter((w: any) => vals.includes(w._id.toString()))
+                          .map((w: any) => ({
+                            _id: w._id.toString(),
+                            ward_code: w.ward_code,
+                            ward_name: w.ward_name,
+                            local_body_code: w.local_body_code,
+                            local_body_name: w.local_body_name,
+                          })) || [];
+
+                        form.setValue("location.wards", selectedWards, { shouldDirty: true });
+                      }}
+
                       placeholder="Select Wards"
                       badgeClassName="w-[150px] truncate"
                       badgeColor="bg-purple-500"

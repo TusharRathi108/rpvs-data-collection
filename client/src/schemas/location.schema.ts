@@ -5,18 +5,18 @@ import { z } from "zod";
 import { AreaType, LocalBodyType } from "@/interfaces/enums.interface";
 
 export const WardSchema = z.object({
-    ward_code: z.string().min(1),
-    ward_number: z.string().min(1),
-    ward_name: z.string().min(1),
-    local_body_type_code: z.string().min(1),
-    local_body_type_name: z.string().min(1),
+  ward_code: z.string().optional().nullable(),
+  ward_number: z.string().optional().nullable(),
+  ward_name: z.string().min(1), // keep name required
+  local_body_type_code: z.string().optional().nullable(),
+  local_body_type_name: z.string().optional().nullable(),
 });
 
 export const VillageSchema = z.object({
-    panchayat_code: z.string().min(1),
-    village_code: z.string().min(1),
-    village_name: z.string().min(1),
-    panchayat_name: z.string().min(1),
+  panchayat_code: z.string().optional().nullable(),
+  village_code: z.string().optional().nullable(),
+  village_name: z.string().min(1),
+  panchayat_name: z.string().optional().nullable(),
 });
 
 export const LocationSchema = z.object({

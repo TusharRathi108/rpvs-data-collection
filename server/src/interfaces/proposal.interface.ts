@@ -6,6 +6,8 @@ export interface IProposalMaster {
     nodal_minister_id: Types.ObjectId
     sector_id: Types.ObjectId
     permissible_works_id: Types.ObjectId[]
+    department_id: Types.ObjectId
+    department_name: string
     old_work: boolean
     nodal_minister: string
     reference_number: string

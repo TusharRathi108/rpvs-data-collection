@@ -7,6 +7,8 @@ export interface IProjectMaster {
     nodal_minister_id: Types.ObjectId
     sector_id: Types.ObjectId
     permissible_works_id: Types.ObjectId[]
+    department_id: Types.ObjectId
+    department_name: string
     nodal_minister: string
     reference_number: string
     manual_reference_number: string

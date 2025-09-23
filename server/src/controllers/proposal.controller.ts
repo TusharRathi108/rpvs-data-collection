@@ -18,9 +18,77 @@ import { generateProposalRef } from "@/utils/generate-reference_number";
 import { ProjectMasterModel } from "@/models/project.model";
 import { ProjectProgressModel } from "@/models/project-progress.model";
 
+function sanitizeLocation(location: any) {
+  if (!location) return location;
+
+  // --- helper to normalize values ---
+  const normalizeObjectId = (val: any) =>
+    val && typeof val === "string" && val.trim() !== "" ? val : null;
+
+  const normalizeString = (val: any) =>
+    typeof val === "string" ? val.trim() : "";
+
+  const normalizeArray = (val: any) =>
+    Array.isArray(val) ? val : [];
+
+  // --- common fields ---
+  location.state_id = normalizeObjectId(location.state_id);
+  location.district_id = normalizeObjectId(location.district_id);
+  location.constituency_id = normalizeObjectId(location.constituency_id);
+
+  location.state_code = normalizeString(location.state_code);
+  location.state_name = normalizeString(location.state_name);
+  location.district_code = normalizeString(location.district_code);
+  location.district_name = normalizeString(location.district_name);
+  location.constituency_code = normalizeString(location.constituency_code);
+  location.constituency_name = normalizeString(location.constituency_name);
+
+  location.village_id = normalizeArray(location.village_id);
+  location.ward_id = normalizeArray(location.ward_id);
+  location.villages = normalizeArray(location.villages);
+  location.wards = normalizeArray(location.wards);
+
+  // --- urban vs rural ---
+  if (location.area_type === "UR") {
+    location.local_body_id = normalizeObjectId(location.local_body_id);
+    location.local_body_code = normalizeString(location.local_body_code);
+    location.local_body_name = normalizeString(location.local_body_name);
+    location.local_body_type_code = normalizeString(location.local_body_type_code);
+    location.local_body_type_name = normalizeString(location.local_body_type_name);
+
+    // irrelevant in UR → null/empty
+    location.block_id = "";
+    location.panchayat_id = "";
+    location.block_code = "";
+    location.block_name = "";
+    location.panchayat_code = "";
+    location.panchayat_name = "";
+  }
+
+  if (location.area_type === "RU") {
+    location.block_id = normalizeObjectId(location.block_id);
+    location.panchayat_id = normalizeObjectId(location.panchayat_id);
+    location.block_code = normalizeString(location.block_code);
+    location.block_name = normalizeString(location.block_name);
+    location.panchayat_code = normalizeString(location.panchayat_code);
+    location.panchayat_name = normalizeString(location.panchayat_name);
+
+    // irrelevant in RU → null/empty
+    location.local_body_id = "";
+    location.local_body_code = "";
+    location.local_body_name = "";
+    location.local_body_type_code = "";
+    location.local_body_type_name = "";
+  }
+
+  return location;
+}
+
+
 const createProposal = async (request: Request, response: Response) => {
     try {
         const user = request.user as SessionUser;
+        // request.body.location = sanitizeLocation(request.body.location);
 
         if (!user) {
             throwHttpException(ExceptionType.NotFound, "User does not exist!");
@@ -76,6 +144,8 @@ const createProposal = async (request: Request, response: Response) => {
             nodal_minister_id: createdProposal.nodal_minister_id,
             sector_id: createdProposal.sector_id,
             permissible_works_id: createdProposal.permissible_works_id,
+           department_id: createdProposal.department_id,
+           department_name: createdProposal.department_name,
             nodal_minister: createdProposal.nodal_minister,
             reference_number: createdProposal.reference_number,
             manual_reference_number: createdProposal.manual_reference_number,
@@ -305,6 +375,8 @@ const updateProposal = async (request: Request, response: Response) => {
             nodal_minister_id: updatedProposal.nodal_minister_id,
             sector_id: updatedProposal.sector_id,
             permissible_works_id: updatedProposal.permissible_works_id,
+            department_id: updatedProposal.department_id,
+            department_name: updatedProposal.department_name,
             nodal_minister: updatedProposal.nodal_minister,
             reference_number: updatedProposal.reference_number,
             manual_reference_number: updatedProposal.manual_reference_number,
