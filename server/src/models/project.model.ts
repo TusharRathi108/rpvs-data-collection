@@ -39,7 +39,7 @@ const projectMasterSchema = new Schema<ProjectMasterDocument>(
             },
         ],
 
-        department_id: {type: Schema.Types.ObjectId, ref: 'department', trim: true, required: true},
+        department_id: { type: Schema.Types.ObjectId, ref: 'department', trim: true, required: true },
         department_name: { type: String, trim: true, required: true },
 
         nodal_minister: { type: String, trim: true },
@@ -49,7 +49,7 @@ const projectMasterSchema = new Schema<ProjectMasterDocument>(
 
         recommender_name: { type: String, required: true, trim: true },
         recommender_contact: { type: Number, required: true },
-        recommender_email: { type: String, required: true, lowercase: true, trim: true },
+        recommender_email: { type: String, lowercase: true, trim: true },
         recommender_type: {
             type: String,
             enum: Object.values(ProposalRecommenderType),

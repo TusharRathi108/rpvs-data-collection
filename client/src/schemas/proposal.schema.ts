@@ -16,7 +16,6 @@ export const VillageSchema = z.object({
     panchayat_name: z.string().min(1),
 });
 
-
 export const LocationSchema = z.object({
     state_id: z.string().optional(),
     district_id: z.string().optional(),
@@ -63,8 +62,8 @@ export const ProposalFormSchema = z.object({
     recommender_name: z.string().min(1),
     recommender_contact: z.number(),
     recommender_email: z
-    .union([z.email({ message: "Invalid email" }), z.literal("")])
-    .optional(),
+        .union([z.email({ message: "Invalid email" }), z.literal("")])
+        .optional(),
     recommender_type: z.enum(["MLA", "OTHER"]),
     recommender_designation: z.string().optional(),
 

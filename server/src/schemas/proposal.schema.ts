@@ -20,7 +20,9 @@ const ProposalBaseSchema = z.object({
 
     recommender_name: z.string().trim().min(1),
     recommender_contact: z.number().nonnegative(),
-    recommender_email: z.email().optional(),
+    recommender_email: z
+        .union([z.email({ message: "Invalid email" }), z.literal("")])
+        .optional(),
     recommender_type: z.enum(ProposalRecommenderType),
     recommender_designation: z.string().trim().optional(),
 

@@ -10,32 +10,32 @@ const zObjectIdOrNull = z
   .transform((val) => (val === "" ? null : val));
 
 export const WardSchema = z.object({
-    ward_code: z.string().min(1),
-    ward_number: z.string().min(1),
-    ward_name: z.string().min(1),
-    local_body_type_code: z.string().min(1),
-    local_body_type_name: z.string().min(1),
+  ward_code: z.string().min(1),
+  ward_number: z.string().min(1),
+  ward_name: z.string().min(1),
+  local_body_type_code: z.string().min(1),
+  local_body_type_name: z.string().min(1),
 });
 
 export const VillageSchema = z.object({
-    panchayat_code: z.string().min(1),
-    village_code: z.string().min(1),
-    village_name: z.string().min(1),
-    panchayat_name: z.string().min(1),
+  panchayat_code: z.string().min(1),
+  village_code: z.string().min(1),
+  village_name: z.string().min(1),
+  panchayat_name: z.string().min(1),
 });
 
 const BaseLocationSchema = z.object({
-    state_id: zObjectId,
-    district_id: zObjectId,
-    constituency_id: zObjectId,
-    area_type: z.enum(AreaType),
+  state_id: zObjectId,
+  district_id: zObjectId,
+  constituency_id: zObjectId,
+  area_type: z.enum(AreaType),
 
-    state_code: z.string().min(1),
-    state_name: z.string().min(1),
-    district_code: z.string().min(1),
-    district_name: z.string().min(1),
-    constituency_code: z.string().min(1),
-    constituency_name: z.string().min(1),
+  state_code: z.string().min(1),
+  state_name: z.string().min(1),
+  district_code: z.string().min(1),
+  district_name: z.string().min(1),
+  constituency_code: z.string().min(1),
+  constituency_name: z.string().min(1),
 });
 
 const RuralLocationSchema = BaseLocationSchema.extend({
@@ -70,6 +70,10 @@ const UrbanLocationSchema = BaseLocationSchema.extend({
   local_body_type_name: z.string().nullable().optional(),
   local_body_code: z.string().nullable().optional(),
   local_body_name: z.string().nullable().optional(),
+
+  block_id: zObjectIdOrNull.nullable().optional(),
+  panchayat_id: zObjectIdOrNull.nullable().optional(),
+  village_id: z.array(zObjectIdOrNull).default([]),
 
   wards: z.array(WardSchema).default([]),
   villages: z.array(VillageSchema).default([]),
