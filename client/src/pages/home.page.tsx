@@ -464,16 +464,21 @@ const HomePage = () => {
   return (
     <main className="p-2 flex min-h-screen flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
       <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
-        <p className="bg-blue-800/25 text-xl text-blue-950 rounded-2xl p-3">
-          USER: {user?.username}
-        </p>{" "}
-        <button
-          className="bg-red-500/90 text-white px-4 py-2 rounded-2xl hover:bg-red-600 transition-colors"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? "Logging out..." : "LOGOUT"}
-        </button>
+        <h1 className="text-amber-200 text-3xl">RANGLA PUNJAB VIKAS SCHEME</h1>
+        <div className="flex gap-5">
+          <p className="bg-blue-800/25 text-xl text-blue-950 rounded-2xl p-3">
+            {user?.role_name === "Planning"
+              ? "PLANNING"
+              : `DLC: ${user?.district_name}`}
+          </p>{" "}
+          <button
+            className="bg-red-500/90 text-white px-4 py-2 rounded-2xl hover:bg-red-600 transition-colors"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? "Logging out..." : "LOGOUT"}
+          </button>
+        </div>
       </nav>
 
       <div className="flex flex-col items-center gap-2 pt-5 w-full">
