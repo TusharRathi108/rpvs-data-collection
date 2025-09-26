@@ -125,10 +125,13 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
     selectedDistrictId ?? skipToken
   );
 
+  console.log(iaData)
+
   const implementationAgencies = iaData?.records || [];
 
   const { data: deptData, isLoading: deptLoading } =
     useGetAllDepartmentsQuery();
+
   const departments = deptData?.records || [];
 
   const form = useForm<ProposalFormValues>({
@@ -474,6 +477,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="recommender_name"
@@ -757,6 +761,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="location.village_id"

@@ -104,6 +104,8 @@ const BankMasterForm = ({
   // console.log("IFSC CODE: ", ifscData);
   // console.log("INITIAL DATA: ", initialData);
 
+  // console.log(iaData)
+
   const [createBankHead] = useCreateBankHeadMutation();
   const [updateBankHead] = useUpdateBankHeadMutation();
 
