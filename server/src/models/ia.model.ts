@@ -12,23 +12,19 @@ const implementationAgencySchema = new Schema<IImplementationAgencyDocument>(
         district_id: {
             type: Schema.Types.ObjectId,
             ref: "district",
-            required: true,
         },
         block_id: {
             type: Schema.Types.ObjectId,
             ref: "block",
-            required: true,
         },
 
         district_code: {
             type: String,
             ref: "district",
             trim: true,
-            required: true,
         },
         block_code: {
             type: String,
-            required: true,
             trim: true,
         },
 
@@ -36,17 +32,14 @@ const implementationAgencySchema = new Schema<IImplementationAgencyDocument>(
             type: String,
             ref: "block",
             trim: true,
-            required: true,
         },
         block_name: {
             type: String,
-            required: true,
             trim: true,
         },
 
         agency_name: {
             type: String,
-            required: true,
             trim: true,
         },
         financial_year: {
