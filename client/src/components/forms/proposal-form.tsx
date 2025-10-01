@@ -73,6 +73,8 @@ const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   old_work: false,
   proposal_name: "",
   proposal_amount: 0,
+  transferred_funds: 0,
+  bank_account_number: 0,
   reference_number: "",
   manual_reference_number: "",
   permissible_work: [],
@@ -82,8 +84,12 @@ const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   assigned_ia_name: "",
   location: {
     state_id: "",
+    state_code: "",
+    state_name: "",
     area_type: "RU",
+    district_id: "",
     district_code: "",
+    district_name: "",
     block_code: "",
     constituency_code: "",
     panchayat_code: "",
@@ -109,11 +115,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const selectedDistrictId = user?.district?._id;
 
   // console.log("USER: ", user);
-  // console.log(initialData);
-  console.log(districtCode);
+  console.log("INITIAL DATA: ", initialData);
+  // console.log(districtCode);
 
   const [createProposal, { isLoading: isCreating }] =
     useCreateProposalMutation();
+
   const [updateProposal, { isLoading: isUpdating }] =
     useUpdateProposalMutation();
 
@@ -125,7 +132,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
     selectedDistrictId ?? skipToken
   );
 
-  console.log(iaData)
+  // console.log(iaData);
 
   const implementationAgencies = iaData?.records || [];
 
@@ -222,6 +229,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   );
 
   const rawSubSectors = sectorDetails?.records?.[0]?.sub_sectors;
+
   const subSectors = Array.isArray(rawSubSectors)
     ? rawSubSectors
     : rawSubSectors
@@ -229,6 +237,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
     : [];
 
   const rawWorks = sectorDetails?.records?.[0]?.works;
+
   const permissibleWorksOptions = Array.isArray(rawWorks)
     ? rawWorks.map((w: string) => ({ value: w, label: w }))
     : rawWorks
@@ -237,7 +246,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
   const onSubmit = async (values: ProposalFormValues) => {
     try {
-      console.log(values);
+      // console.log(values);
       const isValid = await form.trigger();
       if (!isValid) {
         toast.error("Please fix the form errors before submitting");
@@ -254,13 +263,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         location: {
           ...values.location,
           state_id: "68c289dfcc5da75edf90bf6e",
-          state_code: user?.state_code || "",
-          state_name: user?.state_name || "",
+          state_code: stateCode,
+          state_name: "Punjab",
           district_id: selectedDistrictId || "",
-          district_code: user?.district_code || "",
+          district_code: districtCode || "",
           district_name: user?.district_name || "",
           constituency_id: values.location.constituency_id,
-
           ...(values.area_type === "RU"
             ? {
                 // keep rural fields
@@ -305,7 +313,8 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         },
       };
 
-      // console.log(payload)
+      // console.log("PAYLOAD ENTRY: ", payload);
+      // return;
 
       const { _id, ...payloadWithoutId } = payload;
 
@@ -339,12 +348,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          console.log("Form submit event triggered");
+          // console.log("Form submit event triggered");
 
           form.trigger().then((isValid) => {
-            console.log("Form is valid:", isValid);
+            // console.log("Form is valid:", isValid);
             if (!isValid) {
-              console.error("Validation failed:", form.formState.errors);
+              // console.error("Validation failed:", form.formState.errors);
               toast.error("Please fix form errors before submitting");
             } else {
               form.handleSubmit(onSubmit, (errors) => {
@@ -527,13 +536,13 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     inputMode="numeric"
                     maxLength={10}
                     placeholder="Enter 10-digit number"
-                    value={field.value?.toString() ?? ""}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       if (val.length <= 10) {
                         field.onChange(val ? Number(val) : undefined);
                       }
                     }}
+                    value={field.value ? field.value.toString() : ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -576,7 +585,55 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       const val = e.target.value.replace(/\D/g, "");
                       field.onChange(val ? Number(val) : 0);
                     }}
-                    value={field.value?.toString() || ""}
+                    value={field.value ? field.value.toString() : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="transferred_funds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Transferred Amount (₹)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      field.onChange(val ? Number(val) : 0);
+                    }}
+                    value={field.value ? field.value.toString() : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="bank_account_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bank Account Number</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter bank account number"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      field.onChange(val ? Number(val) : 0);
+                    }}
+                    value={field.value ? field.value.toString() : ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -1145,7 +1202,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       shouldDirty: true,
                     });
                   } else if (typedVal === "NODAL_MINISTER") {
-                    form.setValue("approved_by_dlc", false, {
+                    form.setValue("approved_by_dlc", true, {
                       shouldDirty: true,
                     });
                     form.setValue("approved_by_nm", true, {
@@ -1166,13 +1223,15 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   <RadioGroupItem value="DLC" id="approved_dlc" />
                   <FormLabel htmlFor="approved_dlc">DLC</FormLabel>
                 </div>
-                <div className="flex items-center space-x-2">
+                {/* <div className="flex items-center space-x-2">
                   <RadioGroupItem value="NODAL_MINISTER" id="approved_nodal" />
                   <FormLabel htmlFor="approved_nodal">Nodal Minister</FormLabel>
-                </div>
+                </div> */}
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="BOTH" id="approved_both" />
-                  <FormLabel htmlFor="approved_both">Both</FormLabel>
+                  <FormLabel htmlFor="approved_both">
+                    Both (DLC & Nodal Minister)
+                  </FormLabel>
                 </div>
               </RadioGroup>
             </FormItem>

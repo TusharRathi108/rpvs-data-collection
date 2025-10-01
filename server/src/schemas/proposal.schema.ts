@@ -2,9 +2,9 @@
 import { z } from "zod";
 
 //* file imports
-import { zObjectId } from "@/utils/utility-functions";
+import { AreaType, ProposalActionType, ProposalRecommenderType } from "@/interfaces/enums.interface";
 import { LocationSchema } from "@/schemas/location.schema";
-import { ProposalRecommenderType, ProposalActionType, AreaType } from "@/interfaces/enums.interface";
+import { zObjectId } from "@/utils/utility-functions";
 
 const ProposalBaseSchema = z.object({
     nodal_minister_id: zObjectId.optional(),
@@ -35,6 +35,8 @@ const ProposalBaseSchema = z.object({
 
     // proposal_document: z.string().trim().min(1),
     proposal_amount: z.number().nonnegative(),
+    transferred_funds: z.number().nonnegative(),
+    bank_account_number: z.number().nonnegative(),
 
     approved_by_dlc: z.boolean().default(false),
     approved_by_nm: z.boolean().default(false),
@@ -67,9 +69,7 @@ type PartialUpdateProposalDto = z.infer<typeof PartialUpdateProposalSchema>;
 
 export {
     CreateProposalDto,
-    CreateProposalSchema,
-    UpdateProposalDto,
-    UpdateProposalSchema,
-    PartialUpdateProposalDto,
-    PartialUpdateProposalSchema
-}
+    CreateProposalSchema, PartialUpdateProposalDto,
+    PartialUpdateProposalSchema, UpdateProposalDto,
+    UpdateProposalSchema
+};

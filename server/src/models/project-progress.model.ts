@@ -53,6 +53,7 @@ const projectProgressSchema = new Schema<ProjectProgressDocument>(
         sanctioned_funds: { type: Schema.Types.Double, default: 0 },
         transferred_funds: { type: Schema.Types.Double, default: 0 },
         remaining_funds: { type: Schema.Types.Double, default: 0 },
+        bank_account_number: { type: Schema.Types.Double, default: 0 },
 
         // === Assigned IA ===
         assigned_ia: { type: Schema.ObjectId, ref: "implementation_agency" },

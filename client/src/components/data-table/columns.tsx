@@ -1,6 +1,5 @@
 //* package imports
 import { ArrowUpDown } from "lucide-react";
-import { MdEditSquare } from "react-icons/md";
 import { type ColumnDef, type Row } from "@tanstack/react-table";
 
 //* file imports
@@ -18,9 +17,6 @@ type BudgetHead = {
   allocated_budget: number;
   sanctioned_budget: number;
   sanctioned_budget_date: string;
-  // released_budget: number;
-  // release_budget_date: string;
-  // allocated_budget_date: string;
 };
 
 const budgetHeadColumns = (
@@ -92,28 +88,6 @@ const budgetHeadColumns = (
       return <div className="text-center">{formatted}</div>;
     },
   },
-  // {
-  //   accessorKey: "released_budget",
-  //   header: ({ column }) => (
-  //     <div className="text-center w-full">
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Released Budget
-  //         <ArrowUpDown />
-  //       </Button>
-  //     </div>
-  //   ),
-  //   cell: ({ row }) => {
-  //     const amount = parseFloat(row.getValue("released_budget"));
-  //     const formatted = new Intl.NumberFormat("en-IN", {
-  //       style: "currency",
-  //       currency: "INR",
-  //     }).format(amount);
-  //     return <div className="text-center">{formatted}</div>;
-  //   },
-  // },
   {
     accessorKey: "sanctioned_budget_date",
     header: () => <div className="text-center">Sanction Budget Date</div>,
@@ -145,7 +119,7 @@ const budgetHeadColumns = (
                 : "text-green-600 hover:text-green-800"
             }
           >
-            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
       );
@@ -226,7 +200,7 @@ const bankHeadColumns = (
                   : "text-green-600 hover:text-green-800"
               }
             >
-              {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+              {isEditing ? "Cancel" : "Edit"}
             </Button>
           </div>
         );
@@ -317,34 +291,6 @@ const getProposalColumns = (
       <div className="text-center">{row.getValue("recommender_email")}</div>
     ),
   },
-  // {
-  //   accessorKey: "sector_name",
-  //   header: () => <div className="text-center">Sector</div>,
-  //   cell: ({ row }) => (
-  //     <div className="text-center">{row.getValue("sector_name")}</div>
-  //   ),
-  // },
-  // {
-  //   accessorKey: "sub_sector_name",
-  //   header: () => <div className="text-center">Sub-Sector</div>,
-  //   cell: ({ row }) => (
-  //     <div className="text-center">
-  //       {row.getValue("sub_sector_name") || "—"}
-  //     </div>
-  //   ),
-  // },
-  // {
-  //   accessorKey: "permissible_work",
-  //   header: () => <div className="text-center">Works</div>,
-  //   cell: ({ row }) => {
-  //     const works = row.getValue("permissible_work") as string[];
-  //     return (
-  //       <div className="text-center">
-  //         {works && works.length > 0 ? works.join(", ") : "—"}
-  //       </div>
-  //     );
-  //   },
-  // },
   {
     accessorKey: "proposal_amount",
     header: ({ column }) => (
@@ -365,6 +311,47 @@ const getProposalColumns = (
         currency: "INR",
       }).format(amount);
       return <div className="text-center">{formatted}</div>;
+    },
+  },
+  {
+    accessorKey: "transferred_funds",
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Transferred Amount (₹)
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("transferred_funds"));
+      const formatted = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+      }).format(amount);
+      return <div className="text-center">{formatted}</div>;
+    },
+  },
+  {
+    accessorKey: "bank_account_number",
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Bank Account Number
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="text-center">{row.getValue("bank_account_number")}</div>
+      );
     },
   },
   {
@@ -418,7 +405,7 @@ const getProposalColumns = (
                 : "text-green-600 hover:text-green-800"
             }
           >
-            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
       );
@@ -484,7 +471,7 @@ const getDepartmentColumns = (
                 : "text-green-600 hover:text-green-800"
             }
           >
-            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
       );
@@ -553,7 +540,7 @@ const getImplementationAgencyColumns = (
                 : "text-green-600 hover:text-green-800"
             }
           >
-            {isEditing ? "Cancel" : <MdEditSquare size={20} />}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
       );

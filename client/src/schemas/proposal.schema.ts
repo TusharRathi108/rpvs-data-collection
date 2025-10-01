@@ -77,6 +77,8 @@ export const ProposalFormSchema = z.object({
     permissible_work: z.array(z.string()).optional(),
 
     proposal_amount: z.number().nonnegative(),
+    transferred_funds: z.number().nonnegative(),
+    bank_account_number: z.number().nonnegative(),
 
     approved_by_dlc: z.boolean(),
     approved_by_nm: z.boolean(),

@@ -38,6 +38,7 @@ export interface IProjectProgress {
     approved_funds: boolean
     sanctioned_funds: Double
     transferred_funds: Double
+    bank_account_number: Double
     remaining_funds: Double
 
     assigned_ia: Types.ObjectId
