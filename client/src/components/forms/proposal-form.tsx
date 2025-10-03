@@ -393,8 +393,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             }
           });
         }}
-        className="flex flex-col gap-6"
+        className="relative flex flex-col gap-6"
       >
+        <span className="absolute -top-18 left-[240px] text-red-500 text-2xl">
+          ( * fields are mandatory! )
+        </span>
+
         {/* Area Type Selection */}
         <div className="flex flex-col rounded-2xl gap-5">
           <FormField
@@ -402,7 +406,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="area_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Area Type</FormLabel>
+                <FormLabel>
+                  Area Type<span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <RadioGroup
                     value={field.value}
@@ -434,7 +440,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               name="recommender_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Recommended By</FormLabel>
+                  <FormLabel>
+                    Recommended By <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <RadioGroup
                       value={field.value}
@@ -468,7 +476,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="recommender_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>MLA</FormLabel>
+                    <FormLabel>
+                      MLA<span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(val) =>
                         form.setValue("recommender_name", val, {
@@ -506,7 +516,10 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   name="recommender_designation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Other Recommender</FormLabel>
+                      <FormLabel>
+                        Other Recommender{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -523,7 +536,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   name="recommender_name"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>Recommender Name</FormLabel>
+                      <FormLabel>
+                        Recommender Name <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -560,7 +575,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="recommender_contact"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact</FormLabel>
+                <FormLabel>
+                  Contact<span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="tel"
@@ -605,7 +622,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="proposal_amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Proposed Amount (₹)</FormLabel>
+                <FormLabel>
+                  Proposed Amount (₹) <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -630,30 +649,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Approved Amount (₹)</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Enter amount"
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      field.onChange(val ? Number(val) : 0);
-                    }}
-                    value={field.value ? field.value.toString() : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="transferred_funds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Transferred Amount (₹)</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -789,6 +784,30 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             disabled={true}
             placeholder="Enter bank name"
           />
+
+          <FormField
+            control={form.control}
+            name="transferred_funds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Transferred Amount (₹)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      field.onChange(val ? Number(val) : 0);
+                    }}
+                    value={field.value ? field.value.toString() : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <FormField
@@ -796,7 +815,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           name="proposal_name"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <FormLabel>Proposal Name</FormLabel>
+              <FormLabel>
+                Proposal Name<span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Textarea {...field} placeholder="Enter proposal name" />
               </FormControl>
@@ -812,7 +833,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="location.constituency_code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Constituency</FormLabel>
+                <FormLabel>
+                  Constituenc<span className="text-red-500">*</span>
+                </FormLabel>
                 <Select
                   // Constituency
                   onValueChange={(val) => {
@@ -859,7 +882,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="location.block_id" // 👈 bind to _id instead
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Block</FormLabel>
+                    <FormLabel>
+                      Block<span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(val) => {
                         const selected = blocksData?.records.find(
@@ -926,7 +951,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="location.panchayat_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Panchayat</FormLabel>
+                    <FormLabel>
+                      Panchayat<span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(val) => {
                         const selected = panchayatsData?.records.find(
@@ -980,7 +1007,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
                   return (
                     <FormItem className="flex-1">
-                      <FormLabel>Villages</FormLabel>
+                      <FormLabel>
+                        Villages<span className="text-red-500">*</span>
+                      </FormLabel>
                       <MultiSelectWithBadges
                         options={options}
                         values={(field.value || []).filter(Boolean)}
@@ -1026,7 +1055,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="location.local_body_type_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local Body Type</FormLabel>
+                    <FormLabel>
+                      Local Body Type <span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(val) => {
                         form.setValue("location.local_body_type_code", val, {
@@ -1072,7 +1103,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="location.local_body_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local Body</FormLabel>
+                    <FormLabel>
+                      Local Body<span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(val) => {
                         const selected = localBodiesData?.records.find(
@@ -1132,7 +1165,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 name="location.ward_id"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Wards</FormLabel>
+                    <FormLabel>
+                      Wards<span className="text-red-500">*</span>
+                    </FormLabel>
                     <MultiSelectWithBadges
                       options={
                         wardsData?.records?.map((w: any) => ({
@@ -1186,7 +1221,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="department_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Department</FormLabel>
+                <FormLabel>
+                  Department<span className="text-red-500">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={(val) => {
                     const selected = departments.find((d) => d._id === val);
@@ -1229,7 +1266,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="sector_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sector</FormLabel>
+                <FormLabel>
+                  Sector<span className="text-red-500">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={(val) => {
                     const selected = sectorsData?.records?.find(
@@ -1310,7 +1349,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
               return (
                 <FormItem className="flex flex-col flex-1">
-                  <FormLabel>Permissible Works</FormLabel>
+                  <FormLabel>
+                    Permissible Works <span className="text-red-500">*</span>
+                  </FormLabel>
                   <MultiSelectWithBadges
                     options={permissibleWorksOptions}
                     values={field.value || []}
@@ -1336,7 +1377,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           name="approved_by"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Approved By</FormLabel>
+              <FormLabel>
+                Approved By<span className="text-red-500">*</span>
+              </FormLabel>
               <RadioGroup
                 value={field.value ?? ""}
                 onValueChange={(val) => {
@@ -1393,7 +1436,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           name="assigned_ia"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Implementation Agency</FormLabel>
+              <FormLabel>
+                Implementation Agency <span className="text-red-500">*</span>
+              </FormLabel>
               <Select
                 value={field.value || ""}
                 onValueChange={(val) => {
