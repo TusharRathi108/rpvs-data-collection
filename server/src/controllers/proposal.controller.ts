@@ -203,6 +203,12 @@ const fetchProposalDetails = async (request: Request, response: Response) => {
                     assigned_ia: "$progress.assigned_ia",
                     assigned_ia_name: "$progress.assigned_ia_name",
                     transferred_funds: "$progress.transferred_funds",
+                    sanctioned_funds: "$progress.sanctioned_funds",
+
+                    ifsc_code: "$progress.ifsc_code",
+                    branch_name: "$progress.branch_name",
+                    branch_code: "$progress.branch_code",
+                    bank_name: "$progress.bank_name",
                     bank_account_number: "$progress.bank_account_number"
                 },
             },
