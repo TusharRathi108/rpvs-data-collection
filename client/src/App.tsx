@@ -15,9 +15,10 @@ const App = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
 
   // console.log("First Log: ", user);
+  console.log(import.meta.env.VITE_API_URL)
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+    fetch(`${import.meta.env.VITE_API_URL}auth/me`, {
       credentials: "include",
     })
       .then((res) => res.json())
