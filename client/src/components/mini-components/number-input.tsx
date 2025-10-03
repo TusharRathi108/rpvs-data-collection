@@ -21,6 +21,8 @@ const NumberInput = ({ control, name, label }: any) => (
             type="text"
             inputMode="numeric"
             placeholder={`Enter ${label.toLowerCase()}`}
+            value={field.value ?? ""}
+            onChange={(e) => field.onChange(e.target.value || undefined)}
           />
         </FormControl>
         <FormMessage />

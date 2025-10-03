@@ -60,7 +60,9 @@ passport.use(
                         district_name: district.district_name,
                         state_code: district.state_code,
                         state_name: district.state_name,
-                    }
+                    },
+
+                    password_reset: typedUser.password_reset
                 };
 
                 // console.log(sessionUser)

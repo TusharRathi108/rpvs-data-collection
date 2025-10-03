@@ -1,15 +1,15 @@
 //* package imports
-import session from "express-session";
 import cookieParser from "cookie-parser";
 import express, { Express, json, urlencoded } from "express";
+import session from "express-session";
 
 //* file imports
 import { env } from "@/configs/env";
-import authRouter from "@/routes/auth.route";
-import adminRouter from "@/routes/admin.route";
-import passport from "./globals/passport-service";
-import { corsMiddleware } from "@/middlewares/cors-handler";
 import { ensureAuthenticated } from "@/middlewares/authentication";
+import { corsMiddleware } from "@/middlewares/cors-handler";
+import adminRouter from "@/routes/admin.route";
+import authRouter from "@/routes/auth.route";
+import passport from "./globals/passport-service";
 
 //? initialize express application 
 const expressApp: Express = express();

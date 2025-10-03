@@ -14,9 +14,13 @@ const ProposalBaseSchema = z.object({
     department_name: z.string(),
 
     // old_work: z.boolean().optional(),
-    nodal_minister: z.string().trim().optional(),
     // reference_number: z.string().trim(),
-    manual_reference_number: z.string().trim().optional(),
+    // financial_year: z.string().trim().min(1),
+    // sub_sector_name: z.string().trim().min(1),
+    // proposal_document: z.string().trim().min(1),
+
+    nodal_minister: z.string().trim().optional(),
+    manual_reference_number: z.union([z.string().min(1), z.literal("")]).optional(),
 
     recommender_name: z.string().trim().min(1),
     recommender_contact: z.number().nonnegative(),
@@ -29,19 +33,29 @@ const ProposalBaseSchema = z.object({
     area_type: z.enum(AreaType),
     proposal_name: z.string().trim().min(1),
     sector_name: z.string().trim().min(1),
-    // sub_sector_name: z.string().trim().min(1),
+
 
     permissible_work: z.array(z.string().trim()).optional(),
 
-    // proposal_document: z.string().trim().min(1),
     proposal_amount: z.number().nonnegative(),
-    transferred_funds: z.number().nonnegative(),
-    bank_account_number: z.number().nonnegative(),
+    sanctioned_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
+    transferred_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
+
+    ifsc_code: z.union([z.string().min(1), z.literal("")]).optional(),
+    branch_code: z.union([z.string().min(1), z.literal("")]).optional(),
+    branch_name: z.union([z.string().min(1), z.literal("")]).optional(),
+    bank_name: z.union([z.string().min(1), z.literal("")]).optional(),
+    bank_account_number: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (!val || val.trim() === "") return null;
+            const num = Number(val);
+            return isNaN(num) ? null : num;
+        }),
 
     approved_by_dlc: z.boolean().default(false),
     approved_by_nm: z.boolean().default(false),
-
-    // financial_year: z.string().trim().min(1),
 
     assigned_ia: zObjectId,
     assigned_ia_name: z.string(),

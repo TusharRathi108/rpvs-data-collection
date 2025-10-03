@@ -53,6 +53,12 @@ const projectProgressSchema = new Schema<ProjectProgressDocument>(
         sanctioned_funds: { type: Schema.Types.Double, default: 0 },
         transferred_funds: { type: Schema.Types.Double, default: 0 },
         remaining_funds: { type: Schema.Types.Double, default: 0 },
+
+        // === Bank Details ===
+        ifsc_code: { type: String, default: "" },
+        branch_code: { type: String, default: "" },
+        branch_name: { type: String, default: "" },
+        bank_name: { type: String, default: "" },
         bank_account_number: { type: Schema.Types.Double, default: 0 },
 
         // === Assigned IA ===

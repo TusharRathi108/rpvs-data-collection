@@ -12,6 +12,7 @@ interface IUser {
     district_name: string
     location: ILocation
     isDeleted: boolean
+    password_reset: boolean
     createdBy: Types.ObjectId
     updatedBy: Types.ObjectId
     lastActionTakenBy: Types.ObjectId

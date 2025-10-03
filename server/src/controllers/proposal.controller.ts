@@ -18,76 +18,9 @@ import { generateProposalRef } from "@/utils/generate-reference_number";
 import { ProjectMasterModel } from "@/models/project.model";
 import { ProjectProgressModel } from "@/models/project-progress.model";
 
-function sanitizeLocation(location: any) {
-    if (!location) return location;
-
-    // --- helper to normalize values ---
-    const normalizeObjectId = (val: any) =>
-        val && typeof val === "string" && val.trim() !== "" ? val : null;
-
-    const normalizeString = (val: any) =>
-        typeof val === "string" ? val.trim() : "";
-
-    const normalizeArray = (val: any) =>
-        Array.isArray(val) ? val : [];
-
-    // --- common fields ---
-    location.state_id = normalizeObjectId(location.state_id);
-    location.district_id = normalizeObjectId(location.district_id);
-    location.constituency_id = normalizeObjectId(location.constituency_id);
-
-    location.state_code = normalizeString(location.state_code);
-    location.state_name = normalizeString(location.state_name);
-    location.district_code = normalizeString(location.district_code);
-    location.district_name = normalizeString(location.district_name);
-    location.constituency_code = normalizeString(location.constituency_code);
-    location.constituency_name = normalizeString(location.constituency_name);
-
-    location.village_id = normalizeArray(location.village_id);
-    location.ward_id = normalizeArray(location.ward_id);
-    location.villages = normalizeArray(location.villages);
-    location.wards = normalizeArray(location.wards);
-
-    // --- urban vs rural ---
-    if (location.area_type === "UR") {
-        location.local_body_id = normalizeObjectId(location.local_body_id);
-        location.local_body_code = normalizeString(location.local_body_code);
-        location.local_body_name = normalizeString(location.local_body_name);
-        location.local_body_type_code = normalizeString(location.local_body_type_code);
-        location.local_body_type_name = normalizeString(location.local_body_type_name);
-
-        // irrelevant in UR → null/empty
-        location.block_id = "";
-        location.panchayat_id = "";
-        location.block_code = "";
-        location.block_name = "";
-        location.panchayat_code = "";
-        location.panchayat_name = "";
-    }
-
-    if (location.area_type === "RU") {
-        location.block_id = normalizeObjectId(location.block_id);
-        location.panchayat_id = normalizeObjectId(location.panchayat_id);
-        location.block_code = normalizeString(location.block_code);
-        location.block_name = normalizeString(location.block_name);
-        location.panchayat_code = normalizeString(location.panchayat_code);
-        location.panchayat_name = normalizeString(location.panchayat_name);
-
-        // irrelevant in RU → null/empty
-        location.local_body_id = "";
-        location.local_body_code = "";
-        location.local_body_name = "";
-        location.local_body_type_code = "";
-        location.local_body_type_name = "";
-    }
-
-    return location;
-}
-
 const createProposal = async (request: Request, response: Response) => {
     try {
         const user = request.user as SessionUser;
-        // request.body.location = sanitizeLocation(request.body.location);
 
         if (!user) {
             throwHttpException(ExceptionType.NotFound, "User does not exist!");
@@ -179,16 +112,22 @@ const createProposal = async (request: Request, response: Response) => {
         const progressPayload = {
             proposal_id: createdProposal._id,
             project_id: createdProject._id,
-            agency_id: null, // optional, can be filled later
+            agency_id: null,
             nodal_minister: createdProposal.nodal_minister_id,
 
             // funds setup
             estimated_funds: createdProposal.proposal_amount,
             approved_funds: true,
-            sanctioned_funds: createdProposal.proposal_amount,
+            sanctioned_funds: parsedPayload.proposal_amount,
             transferred_funds: parsedPayload.transferred_funds,
+            remaining_funds: parsedPayload.proposal_amount! - (parsedPayload.transferred_funds || 0),
+
+            ifsc_code: parsedPayload.ifsc_code,
+            branch_name: parsedPayload.branch_name,
+            branch_code: parsedPayload.branch_code,
+            bank_name: parsedPayload.bank_name,
             bank_account_number: parsedPayload.bank_account_number,
-            remaining_funds: createdProposal.proposal_amount,
+
 
             // IA assignment from frontend payload
             assigned_ia: parsedPayload.assigned_ia ?? null,
@@ -384,20 +323,25 @@ const updateProposal = async (request: Request, response: Response) => {
             nodal_minister: updatedProposal.nodal_minister,
             reference_number: updatedProposal.reference_number,
             manual_reference_number: updatedProposal.manual_reference_number,
+
             recommender_name: updatedProposal.recommender_name,
             recommender_contact: updatedProposal.recommender_contact,
             recommender_email: updatedProposal.recommender_email,
             recommender_type: updatedProposal.recommender_type,
             recommender_designation: updatedProposal.recommender_designation,
+
             area_type: updatedProposal.area_type,
             project_name: updatedProposal.proposal_name,
             sector_name: updatedProposal.sector_name,
             sub_sector_name: updatedProposal.sub_sector_name,
             permissible_work: updatedProposal.permissible_work,
+
             proposal_document: updatedProposal.proposal_document
                 ? [updatedProposal.proposal_document]
                 : [],
+
             proposal_amount: updatedProposal.proposal_amount,
+
             approved_by_dlc: updatedProposal.approved_by_dlc,
             approved_by_nm: updatedProposal.approved_by_nm,
             financial_year: updatedProposal.financial_year,
@@ -418,10 +362,16 @@ const updateProposal = async (request: Request, response: Response) => {
             {
                 $set: {
                     estimated_funds: updatedProposal.proposal_amount,
-                    sanctioned_funds: updatedProposal.proposal_amount,
-                    remaining_funds: updatedProposal.proposal_amount,
+                    sanctioned_funds: parseResult.data.proposal_amount,
                     transferred_funds: parseResult.data.transferred_funds,
+                    remaining_funds: (parseResult.data.proposal_amount! - (parseResult.data.sanctioned_funds ?? 0)),
+
+                    ifsc_code: parseResult.data.ifsc_code,
+                    branch_code: parseResult.data.branch_code,
+                    branch_name: parseResult.data.branch_name,
+                    bank_name: parseResult.data.bank_name,
                     bank_account_number: parseResult.data.bank_account_number,
+
                     approved_by_dlc: updatedProposal.approved_by_dlc,
                     approved_by_nm: updatedProposal.approved_by_nm,
                     updatedBy: toObjectId(user.user_id),

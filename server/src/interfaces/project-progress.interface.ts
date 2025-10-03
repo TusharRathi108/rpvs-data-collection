@@ -38,13 +38,19 @@ export interface IProjectProgress {
     approved_funds: boolean
     sanctioned_funds: Double
     transferred_funds: Double
-    bank_account_number: Double
     remaining_funds: Double
+
+    ifsc_code: string
+    branch_code: string
+    branch_name: string
+    bank_name: string
+    bank_account_number: Double
 
     assigned_ia: Types.ObjectId
     assigned_ia_name: String
 
     isDeleted: boolean
+
     createdBy: Types.ObjectId
     updatedBy?: Types.ObjectId
 

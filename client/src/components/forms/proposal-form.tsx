@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 //* ui components
+import SelectField from "@/components/mini-components/select-field";
+import TextInput from "@/components/mini-components/text-input";
+import NumberInput from "@/components/mini-components/number-input";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -56,6 +59,7 @@ import {
   useGetSubSectorWorksQuery,
 } from "@/store/services/sector.api";
 import { useEffect } from "react";
+import { useGetIfscCodeByIdQuery } from "@/store/services/monetary.api";
 
 const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   district_id: "",
@@ -64,24 +68,38 @@ const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
   department_name: "",
   sector_name: "",
   sub_sector: "",
+
   recommender_name: "",
   recommender_contact: 0,
   recommender_email: "",
   recommender_type: "MLA",
   recommender_designation: "",
+
   area_type: "RU",
   old_work: false,
   proposal_name: "",
+
   proposal_amount: 0,
+  sanctioned_funds: 0,
   transferred_funds: 0,
-  bank_account_number: 0,
+
+  ifsc_code: "",
+  branch_code: "",
+  branch_name: "",
+  bank_name: "",
+  bank_account_number: "",
+
   reference_number: "",
   manual_reference_number: "",
+
   permissible_work: [],
+
   approved_by_dlc: false,
   approved_by_nm: false,
+
   assigned_ia: "",
   assigned_ia_name: "",
+
   location: {
     state_id: "",
     state_code: "",
@@ -114,9 +132,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
   const districtCode = user?.district_code;
   const selectedDistrictId = user?.district?._id;
 
-  // console.log("USER: ", user);
-  console.log("INITIAL DATA: ", initialData);
-  // console.log(districtCode);
+  // console.log("INITIAL DATA: ", initialData);
 
   const [createProposal, { isLoading: isCreating }] =
     useCreateProposalMutation();
@@ -228,6 +244,10 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
       : skipToken
   );
 
+  const { data: ifscData } = useGetIfscCodeByIdQuery(
+    selectedDistrictId ? selectedDistrictId : skipToken
+  );
+
   const rawSubSectors = sectorDetails?.records?.[0]?.sub_sectors;
 
   const subSectors = Array.isArray(rawSubSectors)
@@ -337,6 +357,18 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
     }
   };
 
+  //* hydrate form when editing
+  useEffect(() => {
+    if (initialData?.ifsc_code && ifscData?.records) {
+      const match = ifscData.records.find(
+        (r) => r.ifsc_code === initialData.ifsc_code
+      );
+      if (match) {
+        form.setValue("ifsc_code", match.ifsc_code, { shouldValidate: true });
+      }
+    }
+  }, [ifscData?.records, initialData?.ifsc_code, form]);
+
   useEffect(() => {
     if (selectedDistrictId) {
       refetchIAs();
@@ -349,7 +381,6 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         onSubmit={(e) => {
           e.preventDefault();
           // console.log("Form submit event triggered");
-
           form.trigger().then((isValid) => {
             // console.log("Form is valid:", isValid);
             if (!isValid) {
@@ -574,7 +605,31 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="proposal_amount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Proposal Amount (₹)</FormLabel>
+                <FormLabel>Proposed Amount (₹)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      field.onChange(val ? Number(val) : 0);
+                    }}
+                    value={field.value ? field.value.toString() : ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="sanctioned_funds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Approved Amount (₹)</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -617,7 +672,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="bank_account_number"
             render={({ field }) => (
@@ -639,6 +694,100 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 <FormMessage />
               </FormItem>
             )}
+          /> */}
+        </div>
+
+        {/* Bank Details */}
+        <div className="flex items-center gap-5 w-full">
+          {/* IFSC Code */}
+          <SelectField
+            control={form.control}
+            name="ifsc_code"
+            label="IFSC Code"
+            options={
+              ifscData
+                ? ifscData.records.map((item) => ({
+                    value: item.ifsc_code,
+                    label: `${item.ifsc_code} - ${item.branch_name}`,
+                    ...item,
+                  }))
+                : []
+            }
+            placeholder="Select IFSC Code"
+            onSelect={(selected) => {
+              const record = ifscData?.records.find(
+                (r) => r.ifsc_code === selected.value
+              );
+
+              if (record) {
+                form.setValue("ifsc_code", record.ifsc_code, {
+                  shouldDirty: true,
+                });
+                form.setValue("branch_code", record.branch_code ?? "", {
+                  shouldDirty: true,
+                });
+                form.setValue("branch_name", record.branch_name ?? "", {
+                  shouldDirty: true,
+                });
+                form.setValue(
+                  "bank_name",
+                  record.bank_name ?? "State Bank of India",
+                  {
+                    shouldDirty: true,
+                  }
+                );
+                form.setValue(
+                  "branch_code",
+                  record.branch_code ?? "State Bank of India",
+                  {
+                    shouldDirty: true,
+                  }
+                );
+                // form.setValue(
+                //   "branch_manager_name",
+                //   record.branch_manager_name ?? "",
+                //   { shouldDirty: true }
+                // );
+                // form.setValue(
+                //   "contact_number",
+                //   record.contact_number.toString() ?? "",
+                //   {
+                //     shouldDirty: true,
+                //   }
+                // );
+                // form.setValue("rbo", record.rbo ?? "", {
+                //   shouldDirty: true,
+                // });
+                // form.setValue("remarks", record.remarks ?? "", {
+                //   shouldDirty: true,
+                // });
+              }
+            }}
+          />
+
+          {/* Branch Name */}
+          <TextInput
+            control={form.control}
+            name="branch_name"
+            label="Branch Name"
+            disabled={true}
+            placeholder="Enter branch name"
+          />
+
+          {/* Account Number */}
+          <NumberInput
+            control={form.control}
+            name="bank_account_number"
+            label="Account Number"
+          />
+
+          {/* Bank Name */}
+          <TextInput
+            control={form.control}
+            name="bank_name"
+            label="Bank Name"
+            disabled={true}
+            placeholder="Enter bank name"
           />
         </div>
 

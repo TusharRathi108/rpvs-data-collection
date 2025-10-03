@@ -57,7 +57,7 @@ export const ProposalFormSchema = z.object({
 
     old_work: z.boolean(),
     reference_number: z.string().optional(),
-    manual_reference_number: z.string().optional(),
+    manual_reference_number: z.union([z.string().min(1), z.literal("")]).optional(),
 
     recommender_name: z.string().min(1),
     recommender_contact: z.number(),
@@ -72,13 +72,22 @@ export const ProposalFormSchema = z.object({
     department_name: z.string(),
     sector_name: z.string().min(1),
     sub_sector: z.string().optional(),
+
     // sub_sector_name: z.string().optional(),
 
     permissible_work: z.array(z.string()).optional(),
 
     proposal_amount: z.number().nonnegative(),
-    transferred_funds: z.number().nonnegative(),
-    bank_account_number: z.number().nonnegative(),
+
+    sanctioned_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
+    transferred_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
+
+    ifsc_code: z.union([z.string().min(1), z.literal("")]).optional(),
+
+    branch_code: z.union([z.string().min(1), z.literal("")]).optional(),
+    branch_name: z.union([z.string().min(1), z.literal("")]).optional(),
+    bank_name: z.union([z.string().min(1), z.literal("")]).optional(),
+    bank_account_number: z.string().min(6, "Account number is required").optional(),
 
     approved_by_dlc: z.boolean(),
     approved_by_nm: z.boolean(),
@@ -94,5 +103,3 @@ export const ProposalFormSchema = z.object({
 export type ProposalFormValues = z.infer<typeof ProposalFormSchema> & {
     _id?: string
 };
-
-// export type ProposalFormValues = z.infer<typeof ProposalFormSchema>;

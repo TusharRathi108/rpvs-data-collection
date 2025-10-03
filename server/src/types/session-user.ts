@@ -14,6 +14,7 @@ export interface SessionUser {
         state_code: string;
         state_name: string;
     } | null;
+    password_reset: boolean
 }
 
 declare global {

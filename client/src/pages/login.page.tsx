@@ -63,6 +63,7 @@ const LoginPage = () => {
           username: user.username,
           email: user.email,
           role_name: user.role_name,
+          password_reset: user.password_reset,
           state_code: "03",
           state_name: "Punjab",
           district_code: user.district_code,

@@ -6,6 +6,7 @@ type User = {
     username: string;
     email: string;
     role_name: string;
+    password_reset: boolean
     state_code: string;
     state_name: string;
     district_code: string;
@@ -35,11 +36,13 @@ const authSlice = createSlice({
                 username: payload.username!,
                 email: payload.email!,
                 role_name: payload.role_name!,
+                password_reset: payload.password_reset!,
                 district_code: payload.district_code!,
                 district_name: payload.district_name!,
                 state_code: "03",
                 state_name: "Punjab",
                 district: payload.district!
+
             };
         },
         clearUser: (state) => {

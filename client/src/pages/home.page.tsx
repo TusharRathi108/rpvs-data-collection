@@ -43,6 +43,7 @@ import {
   type ImplementationAgency,
   type ProposalMaster,
 } from "@/components/data-table/columns";
+import PasswordReset from "@/components/forms/password-reset-form";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -462,53 +463,72 @@ const HomePage = () => {
   };
 
   return (
-    <main className="p-2 flex min-h-screen flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
-      <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
-        <h1 className="text-amber-200 text-3xl">RANGLA PUNJAB VIKAS SCHEME</h1>
-        <div className="flex gap-5">
-          <p className="bg-blue-800/25 text-xl text-blue-950 rounded-2xl p-3">
-            {user?.role_name === "Planning"
-              ? "PLANNING"
-              : `DLC: ${user?.district_name}`}
-          </p>{" "}
-          <button
-            className="bg-red-500/90 text-white px-4 py-2 rounded-2xl hover:bg-red-600 transition-colors"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? "Logging out..." : "LOGOUT"}
-          </button>
+    <main className="relative p-2 flex min-h-screen flex-col gap-2 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
+      {/* overlay for password reset */}
+      {user?.password_reset === false && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <PasswordReset />
         </div>
-      </nav>
+      )}
 
-      <div className="flex flex-col items-center gap-2 pt-5 w-full">
-        <section className="flex flex-col w-5/6">
-          <div className="flex flex-col gap-5 card backdrop-blur-md overflow-hidden">
-            <div className="flex p-2 gap-2 bg-white/50 rounded-2xl">
-              {Object.entries(TAB_OPTIONS).map(([key, { label }]) => (
-                <button
-                  key={key}
-                  className={`tab-button focus-visible:outline-none rounded-xl text-black flex-1 py-4 text-center font-medium transition-all ${
-                    activeTab === key ? "bg-white" : "hover:bg-white/10"
-                  }`}
-                  onClick={() => setActiveTab(key as keyof typeof TAB_OPTIONS)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+      {/* content wrapper -> disable click when overlay is visible */}
+      <div
+        className={
+          user?.password_reset === false ? "pointer-events-none opacity-60" : ""
+        }
+      >
+        <nav className="top-2 flex p-3 items-center justify-between h-[70px] w-full border-none rounded-2xl bg-blue-200/50">
+          <h1 className="text-amber-200 text-3xl">
+            RANGLA PUNJAB VIKAS SCHEME
+          </h1>
+          <div className="flex gap-5">
+            <p className="bg-blue-800/25 text-xl text-blue-950 rounded-2xl p-3">
+              {user?.role_name === "Planning"
+                ? "PLANNING"
+                : `DLC: ${user?.district_name}`}
+            </p>
+            <button
+              className="bg-red-500/90 text-white px-4 py-2 rounded-2xl hover:bg-red-600 transition-colors"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? "Logging out..." : "LOGOUT"}
+            </button>
           </div>
-        </section>
+        </nav>
 
-        <div className="flex flex-1 min-w-full pt-5 px-5">
-          <CardWrapper
-            className="w-full"
-            headerLabel={TAB_OPTIONS[activeTab]?.label}
-          >
-            {renderForm()}
-          </CardWrapper>
+        <div className="flex flex-col items-center gap-2 pt-5 w-full">
+          {/* your tabs + form + table */}
+          <section className="flex flex-col w-5/6">
+            <div className="flex flex-col gap-5 card backdrop-blur-md overflow-hidden">
+              <div className="flex p-2 gap-2 bg-white/50 rounded-2xl">
+                {Object.entries(TAB_OPTIONS).map(([key, { label }]) => (
+                  <button
+                    key={key}
+                    className={`tab-button focus-visible:outline-none rounded-xl text-black flex-1 py-4 text-center font-medium transition-all ${
+                      activeTab === key ? "bg-white" : "hover:bg-white/10"
+                    }`}
+                    onClick={() =>
+                      setActiveTab(key as keyof typeof TAB_OPTIONS)
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <div className="flex flex-1 min-w-full pt-5 px-5">
+            <CardWrapper
+              className="w-full"
+              headerLabel={TAB_OPTIONS[activeTab]?.label}
+            >
+              {renderForm()}
+            </CardWrapper>
+          </div>
+          <div className="w-full pt-5 px-5">{renderTable()}</div>
         </div>
-        <div className="w-full pt-5 px-5">{renderTable()}</div>
       </div>
     </main>
   );

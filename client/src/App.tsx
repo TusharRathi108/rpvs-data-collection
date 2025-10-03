@@ -15,10 +15,10 @@ const App = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
 
   // console.log("First Log: ", user);
-  console.log(import.meta.env.VITE_API_URL)
+  // console.log(import.meta.env.VITE_API_URL);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}auth/me`, {
+    fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -30,6 +30,7 @@ const App = () => {
               username: data.records.username,
               email: data.records.email,
               role_name: data.records.role_name,
+              password_reset: data.records.password_reset,
               district_code: data.records.district_code,
               district_name: data.records.district_name,
               state_code: data.records.state_code,
