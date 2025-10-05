@@ -54,7 +54,7 @@ const getTabOptions = (roleName?: string) => {
         searchKey: "proposal_name",
       },
       "bank-master": {
-        label: "BANK MASTER",
+        label: "BANK MASTER FOR IMPLEMENTATION AGENCY",
         form: BankMasterForm,
         searchKey: "bank_name",
       },

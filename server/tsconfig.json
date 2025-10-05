@@ -35,7 +35,9 @@
     /* Optional Path Aliases */
     "paths": {
       "@/*": ["src/*"] // "@" points to the "src" folder
-    }
+    },
+
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
