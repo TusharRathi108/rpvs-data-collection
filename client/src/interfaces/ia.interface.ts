@@ -1,22 +1,22 @@
 interface ImplementationAgency {
     _id: string;
     district_id: string;
-    block_id: string;
+    // block_id: string;
     district_code: string;
-    block_code: string;
+    // block_code: string;
     district_name: string;
-    block_name: string;
+    // block_name: string;
     agency_name: string;
     financial_year: string;
 }
 
 interface CreateImplementationAgencyRequest {
     district_id: string;
-    block_id: string;
+    // block_id: string;
     district_code: string;
-    block_code: string;
+    // block_code: string;
     district_name: string;
-    block_name: string;
+    // block_name: string;
     agency_name: string;
 }
 
@@ -36,11 +36,11 @@ interface FetchImplementationAgencyResponse {
 
 interface UpdateImplementationAgencyRequest {
     district_id?: string;
-    block_id?: string;
+    // block_id?: string;
     district_code?: string;
-    block_code?: string;
+    // block_code?: string;
     district_name?: string;
-    block_name?: string;
+    // block_name?: string;
     agency_name?: string;
 }
 

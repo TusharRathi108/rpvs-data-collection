@@ -473,7 +473,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               )}
             />
 
-            {recommenderType === "MLA" && (
+            {/* {recommenderType === "MLA" && (
               <FormField
                 control={form.control}
                 name="recommender_name"
@@ -488,6 +488,84 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                           shouldDirty: true,
                         })
                       }
+                      value={field.value || ""}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select MLA" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mlasLoading ? (
+                          <SelectItem value="__loading" disabled>
+                            Loading MLAs...
+                          </SelectItem>
+                        ) : (
+                          mlasData?.records?.map((mla: any) => (
+                            <SelectItem key={mla._id} value={mla.mla_name}>
+                              {mla.mla_name} — {mla.constituency_name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )} */}
+
+            {recommenderType === "MLA" && (
+              <FormField
+                control={form.control}
+                name="recommender_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      MLA<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        const selectedMla = mlasData?.records?.find(
+                          (mla: any) => mla.mla_name === val
+                        );
+
+                        // set MLA name
+                        form.setValue("recommender_name", val, {
+                          shouldDirty: true,
+                        });
+
+                        if (selectedMla) {
+                          // ✅ find constituency from master list based on code
+                          const matchedConstituency =
+                            constituenciesData?.records?.find(
+                              (c: any) =>
+                                c.constituency_code ===
+                                selectedMla.constituency_code
+                            );
+
+                          if (matchedConstituency) {
+                            form.setValue(
+                              "location.constituency_id",
+                              matchedConstituency._id || "",
+                              {
+                                shouldDirty: true,
+                              }
+                            );
+                            form.setValue(
+                              "location.constituency_code",
+                              matchedConstituency.constituency_code || "",
+                              {
+                                shouldDirty: true,
+                              }
+                            );
+                            form.setValue(
+                              "location.constituency_name",
+                              matchedConstituency.constituency_name || "",
+                              {
+                                shouldDirty: true,
+                              }
+                            );
+                          }
+                        }
+                      }}
                       value={field.value || ""}
                     >
                       <SelectTrigger>
@@ -831,7 +909,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
         {/* Location Fields */}
         <div className="flex items-center gap-5 w-full">
-          <FormField
+          {/* <FormField
             control={form.control}
             name="location.constituency_code"
             render={({ field }) => (
@@ -857,6 +935,65 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       "location.constituency_name",
                       selected?.constituency_name || ""
                     );
+                  }}
+                  value={field.value || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Constituency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {constituenciesData?.records?.map((c: any) => (
+                      <SelectItem
+                        key={c.constituency_code}
+                        value={c.constituency_code}
+                      >
+                        {c.constituency_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          /> */}
+
+          <FormField
+            control={form.control}
+            name="location.constituency_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Constituency<span className="text-red-500">*</span>
+                </FormLabel>
+                <Select
+                  disabled={recommenderType === "MLA"} // ✅ disable if MLA selected
+                  onValueChange={(val) => {
+                    const selected = constituenciesData?.records.find(
+                      (c: any) => c.constituency_code === val
+                    );
+
+                    if (selected) {
+                      form.setValue(
+                        "location.constituency_id",
+                        selected._id || "",
+                        {
+                          shouldDirty: true,
+                        }
+                      );
+                      form.setValue(
+                        "location.constituency_code",
+                        selected.constituency_code || "",
+                        {
+                          shouldDirty: true,
+                        }
+                      );
+                      form.setValue(
+                        "location.constituency_name",
+                        selected.constituency_name || "",
+                        {
+                          shouldDirty: true,
+                        }
+                      );
+                    }
                   }}
                   value={field.value || ""}
                 >

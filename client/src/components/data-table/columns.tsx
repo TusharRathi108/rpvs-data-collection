@@ -483,7 +483,7 @@ type ImplementationAgency = {
   _id: string;
   financial_year: string;
   district_name: string;
-  block_name: string;
+  // block_name: string;
   agency_name: string;
   contact_person?: string;
   contact_number?: string;
@@ -508,13 +508,13 @@ const getImplementationAgencyColumns = (
       <div className="text-center">{row.getValue("district_name")}</div>
     ),
   },
-  {
-    accessorKey: "block_name",
-    header: () => <div className="text-center">Block</div>,
-    cell: ({ row }) => (
-      <div className="text-center">{row.getValue("block_name")}</div>
-    ),
-  },
+  // {
+  //   accessorKey: "block_name",
+  //   header: () => <div className="text-center">Block</div>,
+  //   cell: ({ row }) => (
+  //     <div className="text-center">{row.getValue("block_name")}</div>
+  //   ),
+  // },
   {
     accessorKey: "agency_name",
     header: () => <div className="text-center">Agency Name</div>,

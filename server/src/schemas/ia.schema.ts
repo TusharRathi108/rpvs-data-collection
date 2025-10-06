@@ -6,10 +6,10 @@ import { zObjectId } from "@/utils/utility-functions";
 
 const CreateImplementationAgencySchema = z.object({
     district_id: zObjectId,
-    block_id: zObjectId,
+    block_id: zObjectId.nullable().optional(),
 
     district_code: z.string().min(1, { message: "District code is required" }),
-    block_code: z.string().min(1, { message: "Block code is required" }),
+    block_code: z.string().nullable().optional(),
 
     district_name: z
         .string()
@@ -17,9 +17,7 @@ const CreateImplementationAgencySchema = z.object({
         .max(100, { message: "District name must not exceed 100 characters" }),
 
     block_name: z
-        .string()
-        .min(2, { message: "Block name must be at least 2 characters long" })
-        .max(100, { message: "Block name must not exceed 100 characters" }),
+        .string().nullable().optional(),
 
     agency_name: z
         .string()
@@ -29,13 +27,13 @@ const CreateImplementationAgencySchema = z.object({
 
 const UpdateImplementationAgencySchema = z.object({
     district_id: zObjectId.optional(),
-    block_id: zObjectId.optional(),
+    block_id: zObjectId.nullable().optional(),
 
     district_code: z.string().optional(),
-    block_code: z.string().optional(),
+    block_code: z.string().nullable().optional(),
 
     district_name: z.string().min(2).max(100).optional(),
-    block_name: z.string().min(2).max(100).optional(),
+    block_name: z.string().nullable().optional(),
 
     agency_name: z.string().min(2).max(150).optional(),
 });

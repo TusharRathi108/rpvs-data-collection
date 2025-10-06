@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { skipToken } from "@reduxjs/toolkit/query/react";
+// import { skipToken } from "@reduxjs/toolkit/query/react";
 
 //* file imports
 import { Button } from "@/components/ui/button";
@@ -40,31 +40,31 @@ import {
   useCreateImplementationAgencyMutation,
   useUpdateImplementationAgencyMutation,
 } from "@/store/services/ia.api";
-import { useFetchBlocksQuery } from "@/store/services/location.api";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+// import { useFetchBlocksQuery } from "@/store/services/location.api";
+// import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 //* helpers
 const getDefaultValues = (): IAMasterFormValues => ({
   district_id: "",
-  block_id: "",
+  // block_id: "",
   agency_name: "",
 });
 
 const parsePayload = (
   values: IAMasterFormValues,
-  districts: any[],
-  blocks: any[]
+  districts: any[]
+  // blocks: any[]
 ): CreateImplementationAgencyRequest => {
   const district = districts.find((d) => d._id === values.district_id);
-  const block = blocks.find((b: any) => b._id === values.block_id);
+  // const block = blocks.find((b: any) => b._id === values.block_id);
 
   return {
     district_id: values.district_id ?? "",
-    block_id: values.block_id ?? "",
+    // block_id: values.block_id ?? "",
     district_code: district?.district_code ?? "",
     district_name: district?.district_name ?? "",
-    block_code: block?.block_code ?? "",
-    block_name: block?.block_name ?? "",
+    // block_code: block?.block_code ?? "",
+    // block_name: block?.block_name ?? "",
     agency_name: values.agency_name ?? "",
   };
 };
@@ -75,7 +75,7 @@ const ImplementationAgencyForm = ({
   districts,
   isLoading,
 }: HeadFormProps<ImplementationAgency>) => {
-  const { user } = useCurrentUser();
+  // const { user } = useCurrentUser();
 
   const form = useForm<IAMasterFormValues>({
     resolver: zodResolver(createIAMasterSchema),
@@ -85,21 +85,22 @@ const ImplementationAgencyForm = ({
   const [createIA] = useCreateImplementationAgencyMutation();
   const [updateIA] = useUpdateImplementationAgencyMutation();
 
-  const selectedDistrict = form.watch("district_id");
+  // const selectedDistrict = form.watch("district_id");
 
-  const stateCode = user?.state_code;
-  const districtCode =
-    districts.find((d) => d._id === selectedDistrict)?.district_code ?? "";
+  // const stateCode = user?.state_code;
+  // const districtCode =
+  //   districts.find((d) => d._id === selectedDistrict)?.district_code ?? "";
 
-  const { data: blocksData, isLoading: blocksLoading } = useFetchBlocksQuery(
-    stateCode && districtCode
-      ? { state_code: stateCode, district_code: districtCode }
-      : skipToken
-  );
+  // const { data: blocksData, isLoading: blocksLoading } = useFetchBlocksQuery(
+  //   stateCode && districtCode
+  //     ? { state_code: stateCode, district_code: districtCode }
+  //     : skipToken
+  // );
 
   //? handler
   const onSubmit = async (values: IAMasterFormValues) => {
-    const payload = parsePayload(values, districts, blocksData?.records || []);
+    // const payload = parsePayload(values, districts, blocksData?.records || []);
+    const payload = parsePayload(values, districts);
 
     try {
       if (initialData?._id) {
@@ -130,7 +131,7 @@ const ImplementationAgencyForm = ({
     if (initialData) {
       form.reset({
         district_id: initialData.district_id ?? "",
-        block_id: initialData.block_id ?? "",
+        // block_id: initialData.block_id ?? "",
         agency_name: initialData.agency_name ?? "",
       });
     } else {
@@ -187,7 +188,7 @@ const ImplementationAgencyForm = ({
             />
 
             {/* Block Select */}
-            <FormField
+            {/* <FormField
               control={form.control}
               name="block_id"
               render={() => (
@@ -216,7 +217,7 @@ const ImplementationAgencyForm = ({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             {/* Agency Name */}
             <TextInput
