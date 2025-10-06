@@ -37,6 +37,7 @@ const LocationSchema = new Schema<ILocation>(
         district_id: { type: Schema.ObjectId, ref: "districts", default: null },
         block_id: { type: Schema.ObjectId, ref: "blocks", default: null },
         constituency_id: { type: Schema.ObjectId, ref: "constituencies", default: null },
+        local_body_type_id: { type: Schema.ObjectId, ref: "local_body_list", default: null },
         local_body_id: { type: Schema.ObjectId, ref: "local_body", default: null },
         panchayat_id: { type: Schema.ObjectId, ref: "panchayats", default: null },
 

@@ -519,7 +519,14 @@ const createProposal = async (
 
 const fetchProposalDetails = async (request: Request, response: Response) => {
     try {
+        const user = request.user as SessionUser
+
         const pipeline: PipelineStage[] = [
+            {
+                $match: {
+                    "location.district_code": user.district_code
+                }
+            },
             {
                 $lookup: {
                     from: "project_progresses",

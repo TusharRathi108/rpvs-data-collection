@@ -62,7 +62,6 @@ import { useEffect } from "react";
 import { useGetIfscCodeByIdQuery } from "@/store/services/monetary.api";
 
 const EMPTY_FORM_VALUES: ProposalFormValues & { _id?: string } = {
-  district_id: "",
   sector_id: "",
   department_id: "",
   department_name: "",
@@ -170,6 +169,9 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           : initialData?.approved_by_nm
           ? "NODAL_MINISTER"
           : undefined,
+      bank_account_number: initialData?.bank_account_number
+        ? String(initialData.bank_account_number)
+        : "",
       location: {
         ...EMPTY_FORM_VALUES.location,
         ...initialData?.location,
@@ -312,6 +314,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               }
             : {
                 // keep urban fields
+                local_body_type_id: values.location.local_body_type_id,
                 local_body_id: values.location.local_body_id,
                 local_body_code: values.location.local_body_code,
                 local_body_name: values.location.local_body_name,
@@ -1052,7 +1055,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             <>
               <FormField
                 control={form.control}
-                name="location.local_body_type_code"
+                name="location.local_body_type_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -1060,23 +1063,49 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     </FormLabel>
                     <Select
                       onValueChange={(val) => {
-                        form.setValue("location.local_body_type_code", val, {
+                        const selected = localBodyTypeData?.records.find(
+                          (lb: any) => lb._id.toString() === val
+                        );
+
+                        if (selected) {
+                          form.setValue(
+                            "location.local_body_type_id",
+                            selected._id.toString(),
+                            {
+                              shouldDirty: true,
+                            }
+                          );
+                          form.setValue(
+                            "location.local_body_type_code",
+                            selected.local_body_type_code,
+                            {
+                              shouldDirty: true,
+                            }
+                          );
+                          form.setValue(
+                            "location.local_body_type_name",
+                            selected.local_body_type_name,
+                            {
+                              shouldDirty: true,
+                            }
+                          );
+                        }
+
+                        // reset dependents
+                        form.setValue("location.local_body_id", "", {
                           shouldDirty: true,
                         });
-
-                        // reset dependent
                         form.setValue("location.local_body_code", "", {
                           shouldDirty: true,
                         });
                         form.setValue("location.local_body_name", "", {
                           shouldDirty: true,
                         });
-                        form.setValue("location.local_body_id", "", {
-                          shouldDirty: true,
-                        });
                         form.setValue("location.ward_id", [], {
                           shouldDirty: true,
                         });
+
+                        field.onChange(val);
                       }}
                       value={field.value || ""}
                     >
@@ -1085,10 +1114,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {localBodyTypeData?.records?.map((lb: any) => (
-                          <SelectItem
-                            key={lb.local_body_type_code}
-                            value={lb.local_body_type_code}
-                          >
+                          <SelectItem key={lb._id} value={lb._id.toString()}>
                             {lb.local_body_type_name}
                           </SelectItem>
                         ))}

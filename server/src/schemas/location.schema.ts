@@ -53,6 +53,7 @@ const RuralLocationSchema = BaseLocationSchema.extend({
   villages: z.array(VillageSchema).default([]),
   wards: z.array(WardSchema).default([]),
 
+  local_body_type_id: zObjectIdOrNull.nullable().optional(),
   local_body_id: zObjectIdOrNull.nullable().optional(),
   local_body_code: z.string().nullable().optional(),
   local_body_name: z.string().nullable().optional(),
@@ -63,6 +64,7 @@ const RuralLocationSchema = BaseLocationSchema.extend({
 const UrbanLocationSchema = BaseLocationSchema.extend({
   area_type: z.literal("UR"),
 
+  local_body_type_id: zObjectIdOrNull.nullable().optional(),
   local_body_id: zObjectIdOrNull.nullable().optional(),
   ward_id: z.array(zObjectIdOrNull).default([]),
 

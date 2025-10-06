@@ -24,6 +24,7 @@ interface ILocation {
     district_id: Types.ObjectId
     block_id: Types.ObjectId
     constituency_id: Types.ObjectId
+    local_body_type_id: Types.ObjectId
     local_body_id: Types.ObjectId
     panchayat_id: Types.ObjectId
     ward_id: Types.ObjectId[]

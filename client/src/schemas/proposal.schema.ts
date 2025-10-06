@@ -21,6 +21,7 @@ export const LocationSchema = z.object({
     district_id: z.string().optional(),
     block_id: z.string().optional(),
     constituency_id: z.string().optional(),
+    local_body_type_id: z.string().optional(),
     local_body_id: z.string().optional(),
     panchayat_id: z.string().optional(),
     ward_id: z.array(z.string()).optional(),
@@ -50,7 +51,6 @@ export const LocationSchema = z.object({
 });
 
 export const ProposalFormSchema = z.object({
-    district_id: z.string(),
     sector_id: z.string(),
     department_id: z.string(),
     // permissible_works_id: z.array(zObjectId).optional(),
@@ -60,7 +60,7 @@ export const ProposalFormSchema = z.object({
     manual_reference_number: z.union([z.string().min(1), z.literal("")]).optional(),
 
     recommender_name: z.string().min(1),
-    recommender_contact: z.number(),
+    recommender_contact: z.number().min(1, "Contact is required!"),
     recommender_email: z
         .union([z.email({ message: "Invalid email" }), z.literal("")])
         .optional(),
@@ -68,16 +68,16 @@ export const ProposalFormSchema = z.object({
     recommender_designation: z.string().optional(),
 
     area_type: z.enum(["RU", "UR"]),
-    proposal_name: z.string().min(1),
-    department_name: z.string(),
-    sector_name: z.string().min(1),
+    proposal_name: z.string().min(1, "Prposal name is required!"),
+    department_name: z.string().min(1, "Deparment is required!"),
+    sector_name: z.string().min(1, "Sector is required!"),
     sub_sector: z.string().optional(),
 
     // sub_sector_name: z.string().optional(),
 
-    permissible_work: z.array(z.string()).optional(),
+    permissible_work: z.array(z.string().min(1, "permissible work is required!")).optional(),
 
-    proposal_amount: z.number().nonnegative(),
+    proposal_amount: z.number().nonnegative().min(1, "Proposal amount is reuiqred!"),
 
     sanctioned_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
     transferred_funds: z.union([z.number().nonnegative(), z.null()]).optional(),
@@ -87,13 +87,13 @@ export const ProposalFormSchema = z.object({
     branch_code: z.union([z.string().min(1), z.literal("")]).optional(),
     branch_name: z.union([z.string().min(1), z.literal("")]).optional(),
     bank_name: z.union([z.string().min(1), z.literal("")]).optional(),
-    bank_account_number: z.string().optional(),
+    bank_account_number: z.union([z.string(), z.literal("")]).optional(),
 
     approved_by_dlc: z.boolean(),
     approved_by_nm: z.boolean(),
 
     assigned_ia: z.string(),
-    assigned_ia_name: z.string(),
+    assigned_ia_name: z.string().min(1, "IA is required!"),
 
     approved_by: z.enum(["DLC", "NODAL_MINISTER", "BOTH"]).optional(),
 
