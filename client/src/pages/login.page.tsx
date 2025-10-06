@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { FaRegEye } from "react-icons/fa";
 import { useNavigate } from "react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,9 +31,8 @@ import {
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const blockLogin = import.meta.env.VITE_LOCK_LOGIN === "true";
   const user = useSelector((state: RootState) => state.auth.user);
-
-  const visibleBanner = useRef(true);
 
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
@@ -94,7 +93,7 @@ const LoginPage = () => {
 
   return (
     <main className="relative h-screen flex flex-col justify-center items-center gap-7 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
-      {visibleBanner.current === true ? (
+      {blockLogin ? (
         <h1 className="bg-yellow-300 rounded-2xl p-5 text-black text-3xl text-center border-3 border-dotted border-black">
           <p>KINDLY, DO NOT LOGIN</p>
           <p>DATA CLEANING IN-PROGRESS</p>
@@ -110,7 +109,7 @@ const LoginPage = () => {
           <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <FormField
-                disabled={visibleBanner.current}
+                disabled={blockLogin ? true : false}
                 control={form.control}
                 name="username"
                 render={({ field }) => (
@@ -129,7 +128,7 @@ const LoginPage = () => {
                 )}
               />
               <FormField
-                disabled={visibleBanner.current}
+                disabled={blockLogin ? true : false}
                 control={form.control}
                 name="password"
                 render={({ field }) => (
