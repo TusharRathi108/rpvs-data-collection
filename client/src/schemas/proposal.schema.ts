@@ -87,7 +87,7 @@ export const ProposalFormSchema = z.object({
     branch_code: z.union([z.string().min(1), z.literal("")]).optional(),
     branch_name: z.union([z.string().min(1), z.literal("")]).optional(),
     bank_name: z.union([z.string().min(1), z.literal("")]).optional(),
-    bank_account_number: z.string().min(6, "Account number is required").optional(),
+    bank_account_number: z.string().optional(),
 
     approved_by_dlc: z.boolean(),
     approved_by_nm: z.boolean(),

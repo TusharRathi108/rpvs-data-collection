@@ -15,10 +15,6 @@ export const CreateUserSchema = z.object({
     district_code: z.string(),
     district_name: z.string(),
     location: LocationSchema.optional(),
-    isDeleted: z.boolean().optional(),
-    createdBy: zObjectId,
-    updatedBy: zObjectId.optional(),
-    lastActionTakenBy: zObjectId.optional()
 })
 
 export const UpdateUserSchema = z.object({
@@ -30,9 +26,6 @@ export const UpdateUserSchema = z.object({
     district_code: z.string().optional(),
     district_name: z.string().optional(),
     location: LocationSchema.optional(),
-    isDeleted: z.boolean().optional(),
-    updatedBy: zObjectId,
-    lastActionTakenBy: zObjectId.optional()
 });
 
 export const BulkCreateUserSchema = z.array(CreateUserSchema);

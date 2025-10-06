@@ -9,7 +9,6 @@ import { env } from "@/configs/env"
 import { mongoService } from "@/globals/mongoose-service"
 import expressApp from "@/express-app"
 
-
 async function startServer() {
     try {
         await mongoService.connectDB()

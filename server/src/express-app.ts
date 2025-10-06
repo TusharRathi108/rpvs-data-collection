@@ -1,7 +1,7 @@
 //* package imports
+import session from "express-session";
 import cookieParser from "cookie-parser";
 import express, { Express, json, urlencoded } from "express";
-import session from "express-session";
 
 //* file imports
 import { env } from "@/configs/env";
