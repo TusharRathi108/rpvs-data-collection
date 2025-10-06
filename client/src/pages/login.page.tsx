@@ -110,6 +110,7 @@ const LoginPage = () => {
           <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <FormField
+                disabled={visibleBanner.current}
                 control={form.control}
                 name="username"
                 render={({ field }) => (
@@ -128,6 +129,7 @@ const LoginPage = () => {
                 )}
               />
               <FormField
+                disabled={visibleBanner.current}
                 control={form.control}
                 name="password"
                 render={({ field }) => (
