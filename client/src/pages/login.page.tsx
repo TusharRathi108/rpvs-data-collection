@@ -99,7 +99,10 @@ const LoginPage = () => {
           <p>DATA CLEANING IN-PROGRESS</p>
         </h1>
       ) : (
-        ""
+        <h1 className="bg-yellow-300 rounded-2xl p-5 text-black text-3xl text-center border-3 border-dotted border-black">
+          {/* <p>Data Entry for testing allowed till 1 PM ( Today )</p> */}
+          <p>Live entries shall be started from 3 PM ( 8th October 2025 )</p>
+        </h1>
       )}
       <h1 className="text-5xl font-semibold text-white drop-shadow-md">
         Rangla Punjab Vikas Scheme
