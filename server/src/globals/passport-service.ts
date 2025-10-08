@@ -19,7 +19,9 @@ passport.use(
                     .populate("role_id", "role_name")
                     .exec();
 
-                if (!user) throwHttpException(ExceptionType.NotFound, "User not found");
+                if (!user) {return done(null , false, {message: "User not found"})}
+
+                if(user.isLocked === true) { return done(null , false, {message: "User not found"})}
 
                 const isValid = await verifyPassword(password, user.password);
 
