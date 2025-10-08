@@ -7,7 +7,7 @@ import { ensurePasswordReset } from "@/middlewares/authentication";
 //* routes
 import resetRouter from "@/routes/reset-password.route";
 import iaRouter from "@/routes/protected-routes/ia.route";
-import roleRouter from "@/routes/protected-routes/role.route"
+import roleRouter from "@/routes/protected-routes/role.route";
 import userRouter from "@/routes/protected-routes/user.route";
 import sectorRouter from "@/routes/protected-routes/sector.route";
 import bankRouter from "@/routes/protected-routes/bank-head.route";

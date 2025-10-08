@@ -83,6 +83,7 @@ const userSchema = new Schema<UserDocument>(
             type: LocationSchema, default: {}
         },
         password_reset: { type: Boolean, default: false },
+        isLocked: {type: Boolean, default: false},
         isDeleted: { type: Boolean, default: false },
         createdBy: { type: Schema.ObjectId, required: true },
         updatedBy: { type: Schema.ObjectId, default: null },

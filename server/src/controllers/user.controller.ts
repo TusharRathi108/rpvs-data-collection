@@ -72,4 +72,21 @@ const fetchMla = async (request: Request, response: Response) => {
     }
 };
 
-export { createUserController, fetchMla }
+const fetchUsers = async(request: Request, response: Response) => {
+    try {
+        const records = await UserModel.find()
+
+        return successHandler({
+            response,
+            records,
+            message: env.DEF_SUCCESS_MESSAGE,
+            status: true,
+            httpCode:200
+        })
+    } catch (error) {
+        console.log(error)
+        return handleError(error, response)
+    }
+}
+
+export { createUserController, fetchMla, fetchUsers }

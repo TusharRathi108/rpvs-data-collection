@@ -13,6 +13,7 @@ interface IUser {
     location: ILocation
     isDeleted: boolean
     password_reset: boolean
+    isLocked: boolean
     createdBy: Types.ObjectId
     updatedBy: Types.ObjectId
     lastActionTakenBy: Types.ObjectId
