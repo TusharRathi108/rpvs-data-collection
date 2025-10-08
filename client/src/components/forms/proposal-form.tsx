@@ -949,7 +949,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
           <FormField
             control={form.control}
             name="location.constituency_code"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>
                   Constituency<span className="text-red-500">*</span>
