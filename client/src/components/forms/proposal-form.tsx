@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 //* ui components
-import SelectField from "@/components/mini-components/select-field";
+// import SelectField from "@/components/mini-components/select-field";
 import TextInput from "@/components/mini-components/text-input";
 import NumberInput from "@/components/mini-components/number-input";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MultiSelectWithBadges } from "../mini-components/multi-select";
+import { MultiSelectWithBadges } from "@/components/mini-components/multi-select";
+import { SingleSelectWithNumbering } from "@/components/mini-components/single-select";
 
 //* schemas & types
 import { ProposalRecommenderType } from "@/interfaces/enums.interface";
@@ -519,21 +520,29 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      MLA<span className="text-red-500">*</span>
+                      MLA <span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(val) => {
+
+                    <SingleSelectWithNumbering
+                      options={
+                        mlasData?.records?.map((mla: any) => ({
+                          label: `${mla.mla_name} — ${mla.constituency_name}`,
+                          value: mla.mla_name,
+                        })) || []
+                      }
+                      value={field.value || null}
+                      onChange={(val) => {
                         const selectedMla = mlasData?.records?.find(
                           (mla: any) => mla.mla_name === val
                         );
 
-                        // set MLA name
-                        form.setValue("recommender_name", val, {
+                        // ✅ update MLA name
+                        form.setValue("recommender_name", val || "", {
                           shouldDirty: true,
                         });
 
                         if (selectedMla) {
-                          // ✅ find constituency from master list based on code
+                          // ✅ find constituency info based on code
                           const matchedConstituency =
                             constituenciesData?.records?.find(
                               (c: any) =>
@@ -545,46 +554,28 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                             form.setValue(
                               "location.constituency_id",
                               matchedConstituency._id || "",
-                              {
-                                shouldDirty: true,
-                              }
+                              { shouldDirty: true }
                             );
                             form.setValue(
                               "location.constituency_code",
                               matchedConstituency.constituency_code || "",
-                              {
-                                shouldDirty: true,
-                              }
+                              { shouldDirty: true }
                             );
                             form.setValue(
                               "location.constituency_name",
                               matchedConstituency.constituency_name || "",
-                              {
-                                shouldDirty: true,
-                              }
+                              { shouldDirty: true }
                             );
                           }
                         }
                       }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select MLA" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mlasLoading ? (
-                          <SelectItem value="__loading" disabled>
-                            Loading MLAs...
-                          </SelectItem>
-                        ) : (
-                          mlasData?.records?.map((mla: any) => (
-                            <SelectItem key={mla._id} value={mla.mla_name}>
-                              {mla.mla_name} — {mla.constituency_name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                      placeholder={
+                        mlasLoading ? "Loading MLAs..." : "Select MLA"
+                      }
+                      disabled={mlasLoading}
+                    />
+
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -776,69 +767,68 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
         {/* Bank Details */}
         <div className="flex items-center gap-5 w-full">
           {/* IFSC Code */}
-          <SelectField
+          <FormField
             control={form.control}
             name="ifsc_code"
-            label="IFSC Code"
-            options={
-              ifscData
-                ? ifscData.records.map((item) => ({
-                    value: item.ifsc_code,
-                    label: `${item.ifsc_code} - ${item.branch_name}`,
-                    ...item,
-                  }))
-                : []
-            }
-            placeholder="Select IFSC Code"
-            onSelect={(selected) => {
-              const record = ifscData?.records.find(
-                (r) => r.ifsc_code === selected.value
-              );
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  IFSC Code <span className="text-red-500">*</span>
+                </FormLabel>
 
-              if (record) {
-                form.setValue("ifsc_code", record.ifsc_code, {
-                  shouldDirty: true,
-                });
-                form.setValue("branch_code", record.branch_code ?? "", {
-                  shouldDirty: true,
-                });
-                form.setValue("branch_name", record.branch_name ?? "", {
-                  shouldDirty: true,
-                });
-                form.setValue(
-                  "bank_name",
-                  record.bank_name ?? "State Bank of India",
-                  {
-                    shouldDirty: true,
+                <SingleSelectWithNumbering
+                  options={
+                    ifscData
+                      ? ifscData.records.map((item: any) => ({
+                          value: item.ifsc_code,
+                          label: `${item.ifsc_code} — ${item.branch_name}`,
+                          ...item,
+                        }))
+                      : []
                   }
-                );
-                form.setValue(
-                  "branch_code",
-                  record.branch_code ?? "State Bank of India",
-                  {
-                    shouldDirty: true,
+                  value={field.value || null}
+                  onChange={(val) => {
+                    const record = ifscData?.records.find(
+                      (r: any) => r.ifsc_code === val
+                    );
+
+                    if (record) {
+                      // ✅ Primary field
+                      form.setValue("ifsc_code", record.ifsc_code, {
+                        shouldDirty: true,
+                      });
+
+                      // ✅ Related fields
+                      form.setValue("branch_code", record.branch_code ?? "", {
+                        shouldDirty: true,
+                      });
+                      form.setValue("branch_name", record.branch_name ?? "", {
+                        shouldDirty: true,
+                      });
+                      form.setValue(
+                        "bank_name",
+                        record.bank_name ?? "State Bank of India",
+                        {
+                          shouldDirty: true,
+                        }
+                      );
+
+                      // Optional fields (uncomment if needed)
+                      // form.setValue("branch_manager_name", record.branch_manager_name ?? "", { shouldDirty: true });
+                      // form.setValue("contact_number", record.contact_number?.toString() ?? "", { shouldDirty: true });
+                      // form.setValue("rbo", record.rbo ?? "", { shouldDirty: true });
+                      // form.setValue("remarks", record.remarks ?? "", { shouldDirty: true });
+                    }
+                  }}
+                  placeholder={
+                    ifscData ? "Select IFSC Code" : "Loading IFSC Codes..."
                   }
-                );
-                // form.setValue(
-                //   "branch_manager_name",
-                //   record.branch_manager_name ?? "",
-                //   { shouldDirty: true }
-                // );
-                // form.setValue(
-                //   "contact_number",
-                //   record.contact_number.toString() ?? "",
-                //   {
-                //     shouldDirty: true,
-                //   }
-                // );
-                // form.setValue("rbo", record.rbo ?? "", {
-                //   shouldDirty: true,
-                // });
-                // form.setValue("remarks", record.remarks ?? "", {
-                //   shouldDirty: true,
-                // });
-              }
-            }}
+                  disabled={!ifscData}
+                />
+
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           {/* Branch Name */}
@@ -964,94 +954,83 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 <FormLabel>
                   Constituency<span className="text-red-500">*</span>
                 </FormLabel>
-                <Select
-                  disabled={recommenderType === "MLA"} // ✅ disable if MLA selected
-                  onValueChange={(val) => {
+                <SingleSelectWithNumbering
+                  options={
+                    constituenciesData?.records?.map((c: any) => ({
+                      label: c.constituency_name,
+                      value: c.constituency_code,
+                    })) || []
+                  }
+                  value={form.watch("location.constituency_code") || null}
+                  onChange={(val) => {
                     const selected = constituenciesData?.records.find(
                       (c: any) => c.constituency_code === val
                     );
-
                     if (selected) {
                       form.setValue(
                         "location.constituency_id",
                         selected._id || "",
-                        {
-                          shouldDirty: true,
-                        }
+                        { shouldDirty: true }
                       );
                       form.setValue(
                         "location.constituency_code",
                         selected.constituency_code || "",
-                        {
-                          shouldDirty: true,
-                        }
+                        { shouldDirty: true }
                       );
                       form.setValue(
                         "location.constituency_name",
                         selected.constituency_name || "",
-                        {
-                          shouldDirty: true,
-                        }
+                        { shouldDirty: true }
                       );
                     }
                   }}
-                  value={field.value || ""}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Constituency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {constituenciesData?.records?.map((c: any) => (
-                      <SelectItem
-                        key={c.constituency_code}
-                        value={c.constituency_code}
-                      >
-                        {c.constituency_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select Constituency"
+                  disabled={recommenderType === "MLA"}
+                />
               </FormItem>
             )}
           />
 
           {areaType === "RU" && (
             <>
+              {/* 🌾 BLOCK */}
               <FormField
                 control={form.control}
-                name="location.block_id" // 👈 bind to _id instead
+                name="location.block_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
                       Block<span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(val) => {
+
+                    <SingleSelectWithNumbering
+                      options={
+                        blocksData?.records?.map((b: any) => ({
+                          label: b.block_name,
+                          value: b._id,
+                        })) || []
+                      }
+                      value={field.value || null}
+                      onChange={(val) => {
                         const selected = blocksData?.records.find(
                           (b: any) => b._id === val
                         );
 
-                        form.setValue(
-                          "location.block_id",
-                          selected?._id || "",
-                          {
+                        if (selected) {
+                          form.setValue("location.block_id", selected._id, {
                             shouldDirty: true,
-                          }
-                        );
-                        form.setValue(
-                          "location.block_code",
-                          selected?.block_code || "",
-                          {
-                            shouldDirty: true,
-                          }
-                        );
-                        form.setValue(
-                          "location.block_name",
-                          selected?.block_name || "",
-                          {
-                            shouldDirty: true,
-                          }
-                        );
+                          });
+                          form.setValue(
+                            "location.block_code",
+                            selected.block_code || "",
+                            { shouldDirty: true }
+                          );
+                          form.setValue(
+                            "location.block_name",
+                            selected.block_name || "",
+                            { shouldDirty: true }
+                          );
+                        }
 
                         // reset dependent fields
                         form.setValue("location.panchayat_id", "", {
@@ -1069,23 +1048,18 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
                         field.onChange(selected?._id || ""); // keep RHF in sync
                       }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Block" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {blocksData?.records?.map((b: any) => (
-                          <SelectItem key={b._id} value={b._id}>
-                            {b.block_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={
+                        blocksData ? "Select Block" : "Loading Blocks..."
+                      }
+                      disabled={!blocksData}
+                    />
+
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* 🏡 PANCHAYAT */}
               <FormField
                 control={form.control}
                 name="location.panchayat_id"
@@ -1094,47 +1068,55 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     <FormLabel>
                       Panchayat<span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(val) => {
+
+                    <SingleSelectWithNumbering
+                      options={
+                        panchayatsData?.records?.map((p: any) => ({
+                          label: p.panchayat_name,
+                          value: p._id,
+                        })) || []
+                      }
+                      value={field.value || null}
+                      onChange={(val) => {
                         const selected = panchayatsData?.records.find(
                           (p: any) => p._id === val
                         );
-                        form.setValue("location.panchayat_id", val, {
-                          shouldDirty: true,
-                        });
-                        form.setValue(
-                          "location.panchayat_code",
-                          selected?.panchayat_code || "",
-                          { shouldDirty: true }
-                        );
-                        form.setValue(
-                          "location.panchayat_name",
-                          selected?.panchayat_name || "",
-                          { shouldDirty: true }
-                        );
+
+                        if (selected) {
+                          form.setValue("location.panchayat_id", selected._id, {
+                            shouldDirty: true,
+                          });
+                          form.setValue(
+                            "location.panchayat_code",
+                            selected.panchayat_code || "",
+                            { shouldDirty: true }
+                          );
+                          form.setValue(
+                            "location.panchayat_name",
+                            selected.panchayat_name || "",
+                            { shouldDirty: true }
+                          );
+                        }
 
                         // reset villages
                         form.setValue("location.village_id", [], {
                           shouldDirty: true,
                         });
                       }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Panchayat" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {panchayatsData?.records?.map((p: any) => (
-                          <SelectItem key={p._id} value={p._id}>
-                            {p.panchayat_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={
+                        panchayatsData
+                          ? "Select Panchayat"
+                          : "Loading Panchayats..."
+                      }
+                      disabled={!panchayatsData}
+                    />
+
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* 🏡 VILLAGES */}
               <FormField
                 control={form.control}
                 name="location.village_id"
@@ -1190,6 +1172,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
           {areaType === "UR" && (
             <>
+              {/* 🏙️ LOCAL BODY TYPE */}
               <FormField
                 control={form.control}
                 name="location.local_body_type_id"
@@ -1198,8 +1181,16 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     <FormLabel>
                       Local Body Type <span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(val) => {
+
+                    <SingleSelectWithNumbering
+                      options={
+                        localBodyTypeData?.records?.map((lb: any) => ({
+                          label: lb.local_body_type_name,
+                          value: lb._id.toString(),
+                        })) || []
+                      }
+                      value={field.value || null}
+                      onChange={(val) => {
                         const selected = localBodyTypeData?.records.find(
                           (lb: any) => lb._id.toString() === val
                         );
@@ -1215,16 +1206,12 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                           form.setValue(
                             "location.local_body_type_code",
                             selected.local_body_type_code,
-                            {
-                              shouldDirty: true,
-                            }
+                            { shouldDirty: true }
                           );
                           form.setValue(
                             "location.local_body_type_name",
                             selected.local_body_type_name,
-                            {
-                              shouldDirty: true,
-                            }
+                            { shouldDirty: true }
                           );
                         }
 
@@ -1244,23 +1231,20 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
 
                         field.onChange(val);
                       }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Local Body Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {localBodyTypeData?.records?.map((lb: any) => (
-                          <SelectItem key={lb._id} value={lb._id.toString()}>
-                            {lb.local_body_type_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={
+                        localBodyTypeData
+                          ? "Select Local Body Type"
+                          : "Loading Types..."
+                      }
+                      disabled={!localBodyTypeData}
+                    />
+
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* 🏢 LOCAL BODY */}
               <FormField
                 control={form.control}
                 name="location.local_body_id"
@@ -1269,16 +1253,27 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                     <FormLabel>
                       Local Body<span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(val) => {
+
+                    <SingleSelectWithNumbering
+                      options={
+                        localBodiesData?.records?.map((lb: any) => ({
+                          label: lb.local_body_name,
+                          value: lb._id.toString(),
+                        })) || []
+                      }
+                      value={field.value || null}
+                      onChange={(val) => {
                         const selected = localBodiesData?.records.find(
                           (lb: any) => lb._id.toString() === val
                         );
+
                         if (selected) {
                           form.setValue(
                             "location.local_body_id",
                             selected._id.toString(),
-                            { shouldDirty: true }
+                            {
+                              shouldDirty: true,
+                            }
                           );
                           form.setValue(
                             "location.local_body_code",
@@ -1301,28 +1296,28 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                             { shouldDirty: true }
                           );
                         }
+
+                        // reset dependent wards
                         form.setValue("location.ward_id", [], {
                           shouldDirty: true,
                         });
+
                         field.onChange(val); // keep RHF synced
                       }}
-                      value={field.value || ""}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Local Body" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {localBodiesData?.records?.map((lb: any) => (
-                          <SelectItem key={lb._id} value={lb._id.toString()}>
-                            {lb.local_body_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={
+                        localBodiesData
+                          ? "Select Local Body"
+                          : "Loading Local Bodies..."
+                      }
+                      disabled={!localBodiesData}
+                    />
+
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* 🏢 WARDS */}
               <FormField
                 control={form.control}
                 name="location.ward_id"
@@ -1385,41 +1380,38 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Department<span className="text-red-500">*</span>
+                  Department <span className="text-red-500">*</span>
                 </FormLabel>
-                <Select
-                  onValueChange={(val) => {
-                    const selected = departments.find((d) => d._id === val);
+
+                <SingleSelectWithNumbering
+                  options={
+                    departments?.map((d: any) => ({
+                      label: d.department_name,
+                      value: d._id,
+                    })) || []
+                  }
+                  value={field.value || null}
+                  onChange={(val) => {
+                    const selected = departments.find(
+                      (d: any) => d._id === val
+                    );
+
                     form.setValue("department_id", selected?._id || "", {
                       shouldDirty: true,
                     });
                     form.setValue(
                       "department_name",
                       selected?.department_name || "",
-                      {
-                        shouldDirty: true,
-                      }
+                      { shouldDirty: true }
                     );
                   }}
-                  value={field.value || ""}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {deptLoading ? (
-                      <SelectItem value="__loading" disabled>
-                        Loading departments...
-                      </SelectItem>
-                    ) : (
-                      departments.map((d) => (
-                        <SelectItem key={d._id} value={d._id}>
-                          {d.department_name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  placeholder={
+                    deptLoading ? "Loading Departments..." : "Select Department"
+                  }
+                  disabled={deptLoading}
+                />
+
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -1430,13 +1422,23 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Sector<span className="text-red-500">*</span>
+                  Sector <span className="text-red-500">*</span>
                 </FormLabel>
-                <Select
-                  onValueChange={(val) => {
+
+                <SingleSelectWithNumbering
+                  options={
+                    sectorsData?.records?.map((s: any) => ({
+                      label: s.sector_name,
+                      value: s._id,
+                    })) || []
+                  }
+                  value={field.value || null}
+                  onChange={(val) => {
                     const selected = sectorsData?.records?.find(
                       (s: any) => s._id === val
                     );
+
+                    // ✅ Update sector fields
                     form.setValue("sector_id", selected?._id || "", {
                       shouldDirty: true,
                     });
@@ -1444,25 +1446,21 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                       shouldDirty: true,
                     });
 
-                    // reset sub-sector & works
+                    // 🔄 Reset dependent sub-sector & works
                     form.setValue("sub_sector", "", { shouldDirty: true });
                     form.setValue("permissible_work", [], {
                       shouldDirty: true,
                     });
+
+                    field.onChange(selected?._id || ""); // keep RHF synced
                   }}
-                  value={field.value || ""}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Sector" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectorsData?.records?.map((s: any) => (
-                      <SelectItem key={s._id} value={s._id}>
-                        {s.sector_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder={
+                    sectorsData ? "Select Sector" : "Loading Sectors..."
+                  }
+                  disabled={!sectorsData}
+                />
+
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -1602,9 +1600,14 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
               <FormLabel>
                 Implementation Agency <span className="text-red-500">*</span>
               </FormLabel>
-              <Select
-                value={field.value || ""}
-                onValueChange={(val) => {
+
+              <SingleSelectWithNumbering
+                options={implementationAgencies.map((ia) => ({
+                  label: ia.agency_name,
+                  value: ia._id,
+                }))}
+                value={field.value || null}
+                onChange={(val) => {
                   const selected = implementationAgencies.find(
                     (ia) => ia._id === val
                   );
@@ -1614,29 +1617,18 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                   form.setValue(
                     "assigned_ia_name",
                     selected?.agency_name || "",
-                    {
-                      shouldDirty: true,
-                    }
+                    { shouldDirty: true }
                   );
                 }}
-              >
-                <SelectTrigger className="w-1/2">
-                  <SelectValue placeholder="Select Agency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {iaLoading ? (
-                    <SelectItem value="__loading" disabled>
-                      Loading agencies...
-                    </SelectItem>
-                  ) : (
-                    implementationAgencies.map((ia) => (
-                      <SelectItem key={ia._id} value={ia._id}>
-                        {ia.agency_name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                placeholder={
+                  iaLoading
+                    ? "Loading agencies..."
+                    : "Select Implementation Agency"
+                }
+                disabled={iaLoading}
+              />
+
+              <FormMessage />
             </FormItem>
           )}
         />

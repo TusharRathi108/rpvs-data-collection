@@ -43,34 +43,33 @@ const createUserController = async (request: Request, response: Response) => {
 
 const fetchMla = async (request: Request, response: Response) => {
     try {
-        const { district_code } = request.user as SessionUser
+        const { district_code } = request.user as SessionUser;
 
         const constituencies = await ConstituencyModel.find(
-            { district_code: district_code },
+            { district_code },
             { constituency_code: 1, constituency_name: 1, _id: 0 }
         ).lean();
 
-        const constituencyCodes = constituencies.map(
-            (c) => c.constituency_code
-        );
+        const constituencyCodes = constituencies.map((c) => c.constituency_code);
 
         const result = await MlaModel.find({
             constituency_code: { $in: constituencyCodes },
-        }).lean();
-
-        // const result = await MlaModel.find()
+        })
+            .collation({ locale: "en", strength: 2 })
+            .sort({ mla_name: 1 })
+            .lean();
 
         return successHandler({
             response,
             records: result,
             message: env.DEF_SUCCESS_MESSAGE,
             status: true,
-            httpCode: 200
-        })
+            httpCode: 200,
+        });
     } catch (error) {
-        console.log('Error: ', error)
-        return handleError(error, response)
+        console.error("Error:", error);
+        return handleError(error, response);
     }
-}
+};
 
 export { createUserController, fetchMla }

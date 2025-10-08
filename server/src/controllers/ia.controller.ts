@@ -39,51 +39,54 @@ const createImplementationAgency = async (request: Request, response: Response) 
 
 const fetchImplementationAgencies = async (request: Request, response: Response) => {
     try {
-        // const user = request.user as SessionUser
-
         const result = await ImplementationAgencyModel.find({
             isDeleted: false,
-        }).lean();
+        })
+            .collation({ locale: "en", strength: 2 })
+            .sort({ agency_name: 1 })
+            .lean();
 
         return successHandler({
             response,
             records: result,
             message: env.DEF_SUCCESS_MESSAGE,
             status: true,
-            httpCode: 200
-        })
+            httpCode: 200,
+        });
     } catch (error) {
-        console.log('Error: ', error)
-        return handleError(error, response)
+        console.error("Error:", error);
+        return handleError(error, response);
     }
-}
+};
 
 const fetchImplemenationAgencyDistrictWise = async (request: Request, response: Response) => {
     try {
-        // const user = request.user as SessionUser
-        const { district_id } = request.params as { district_id: string }
+        const { district_id } = request.params as { district_id: string };
 
         if (!toObjectId(district_id)) {
-            throwHttpException(ExceptionType.BadRequest, "Invalid District ID!")
+            throwHttpException(ExceptionType.BadRequest, "Invalid District ID!");
         }
 
         const result = await ImplementationAgencyModel.find({
             district_id: toObjectId(district_id),
-            isDeleted: false
+            isDeleted: false,
         })
+            .collation({ locale: "en", strength: 2 })
+            .sort({ agency_name: 1 })
+            .lean();
 
         return successHandler({
             response,
             records: result,
             message: env.DEF_SUCCESS_MESSAGE,
             status: true,
-            httpCode: 200
-        })
+            httpCode: 200,
+        });
     } catch (error) {
-        console.log('Error: ', error)
-        return handleError(error, response)
+        console.error("Error:", error);
+        return handleError(error, response);
     }
-}
+};
 
 const updateImplementationAgency = async (request: Request, response: Response) => {
     try {

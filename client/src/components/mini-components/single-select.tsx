@@ -1,6 +1,5 @@
 import * as React from "react";
 import { CheckCircle, Circle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -15,42 +14,31 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 
 type Option = {
   label: string;
   value: string;
 };
 
-interface MultiSelectWithBadgesProps {
+interface SingleSelectWithNumberingProps {
   options: Option[];
-  values: string[];
-  onChange: (values: string[]) => void;
+  value: string | null;
+  onChange: (value: string | null) => void;
   placeholder?: string;
-  badgeColor?: string;
-  badgeClassName?: string;
   disabled?: boolean;
 }
 
-export function MultiSelectWithBadges({
+export function SingleSelectWithNumbering({
   options,
-  values,
+  value,
   onChange,
   placeholder = "Select...",
-  badgeColor = "bg-blue-500",
-  badgeClassName,
   disabled = false,
-}: MultiSelectWithBadgesProps) {
+}: SingleSelectWithNumberingProps) {
   const [open, setOpen] = React.useState(false);
 
-  const toggleValue = (val: string) => {
-    if (disabled) return;
-    if (values.includes(val)) {
-      onChange(values.filter((v) => v !== val));
-    } else {
-      onChange([...values, val]);
-    }
-  };
+  const selectedOption = options.find((opt) => opt.value === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,29 +47,19 @@ export function MultiSelectWithBadges({
           variant="outline"
           disabled={disabled}
           role="combobox"
-          className="flex flex-wrap justify-start gap-1 min-h-[40px] h-auto py-1 bg-white"
+          className="flex justify-between w-full min-h-[40px] h-auto py-1 bg-white"
         >
-          {values.length > 0 ? (
-            values.map((val) => {
-              const opt = options.find((o) => o.value === val);
-              return (
-                <Badge
-                  key={val}
-                  className={cn(
-                    `${badgeColor} ${badgeClassName} text-white cursor-default max-w-[300px] truncate`
-                  )}
-                >
-                  <span className="truncate">{opt?.label || val}</span>
-                </Badge>
-              );
-            })
-          ) : (
-            <span className="text-gray-400">{placeholder}</span>
-          )}
+          <span className="truncate">
+            {selectedOption ? (
+              selectedOption.label
+            ) : (
+              <span className="text-gray-400">{placeholder}</span>
+            )}
+          </span>
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[250px] bg-white focus-visible:outline-none p-0">
+      <PopoverContent className="w-[450px] bg-white focus-visible:outline-none p-0">
         <Command>
           <CommandInput
             placeholder={`Search ${placeholder.toLowerCase()}...`}
@@ -90,12 +68,15 @@ export function MultiSelectWithBadges({
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((opt, index) => {
-                const isSelected = values.includes(opt.value);
+                const isSelected = opt.value === value;
                 return (
                   <CommandItem
                     key={opt.value}
                     value={opt.label}
-                    onSelect={() => toggleValue(opt.value)}
+                    onSelect={() => {
+                      onChange(opt.value === value ? null : opt.value);
+                      setOpen(false);
+                    }}
                     className="flex items-center gap-2"
                   >
                     {/* Number before item */}
@@ -104,7 +85,7 @@ export function MultiSelectWithBadges({
                     {/* Label */}
                     <span className="flex-1 truncate">{opt.label}</span>
 
-                    {/* Selection icon */}
+                    {/* Icon for selection */}
                     {isSelected ? (
                       <CheckCircle className="h-4 w-4 text-green-500" />
                     ) : (
