@@ -633,6 +633,60 @@ const fetchSingleProposal = async (request: Request, response: Response) => {
     }
 };
 
+const fetchAllDistrictPorposalCount = async (request: Request, response: Response) => {
+    const pipelineInformation: PipelineStage[] = [
+        {
+            $group: {
+                _id: "$location.district_code",
+                proposal_count: {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: "districts",
+                localField: "_id",
+                foreignField: "district_code",
+                as: "district_info"
+            }
+        },
+        {
+            $unwind: {
+                path: "$district_info",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                district_code: "$location.district_code",
+                district_name:
+                    "$district_info.district_name",
+                proposal_entered_count: "$proposal_count"
+            }
+        },
+        {
+            $sort: { district_name: 1 }
+        }
+    ]
+    try {
+        const records = await ProposalMasterModel.aggregate(pipelineInformation)
+
+        return successHandler({
+            response,
+            records,
+            message: env.DEF_SUCCESS_MESSAGE,
+            status: true,
+            httpCode: 200
+        })
+
+    } catch (error) {
+        console.error(error)
+        return handleError(error, response)
+    }
+}
+
 // const updateProposal = async (request: Request, response: Response) => {
 //     try {
 //         const user = request.user as SessionUser;
@@ -1007,4 +1061,4 @@ const updateProposal = async (
     }
 };
 
-export { createProposal, fetchProposalDetails, fetchSingleProposal, updateProposal };
+export { createProposal, fetchAllDistrictPorposalCount, fetchProposalDetails, fetchSingleProposal, updateProposal };

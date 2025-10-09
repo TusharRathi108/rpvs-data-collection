@@ -10,7 +10,8 @@ import { corsMiddleware } from "@/middlewares/cors-handler";
 import adminRouter from "@/routes/admin.route";
 import authRouter from "@/routes/auth.route";
 import passport from "@/globals/passport-service";
-import { fetchUsers } from "@/controllers/user.controller";
+// import { fetchUsers } from "@/controllers/user.controller";
+import publicProposal from "@/routes/public-routes/proposal-count.route";
 
 //? initialize express application 
 const expressApp: Express = express();
@@ -46,6 +47,7 @@ expressApp.use((request, response, next) => {
 })
 
 //* initialize routes
+expressApp.use("/api/v1/public", publicProposal);
 expressApp.use("/api/v1/auth", authRouter);
 expressApp.use("/api/v1", ensureAuthenticated, adminRouter)
 

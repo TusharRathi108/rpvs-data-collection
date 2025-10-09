@@ -548,6 +548,30 @@ const getImplementationAgencyColumns = (
   },
 ];
 
+type DistrictProposalStats = {
+  district_name: string;
+  proposal_entered_count: number;
+};
+
+const getDistrictProposalColumns = (): ColumnDef<DistrictProposalStats>[] => [
+  {
+    accessorKey: "district_name",
+    header: () => <div className="text-center">District Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("district_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "proposal_entered_count",
+    header: () => <div className="text-center">Entered Proposal</div>,
+    cell: ({ row }) => (
+      <div className="text-center font-medium">
+        {row.getValue("proposal_entered_count")}
+      </div>
+    ),
+  },
+];
+
 export {
   type BudgetHead,
   budgetHeadColumns,
@@ -559,4 +583,6 @@ export {
   getDepartmentColumns,
   type ImplementationAgency,
   getImplementationAgencyColumns,
+  type DistrictProposalStats,
+  getDistrictProposalColumns,
 };

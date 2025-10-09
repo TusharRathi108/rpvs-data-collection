@@ -27,12 +27,23 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { DataTable } from "@/components/data-table/data-table";
+import { getDistrictProposalColumns } from "@/components/data-table/columns";
+import { useGetDistrictWiseProposalCountQuery } from "@/store/services/proposal.api";
+
+// const districtProposalData = [
+//   { district_name: "Amritsar", proposal_entered_count: 52 },
+//   { district_name: "Ludhiana", proposal_entered_count: 74 },
+//   { district_name: "Bathinda", proposal_entered_count: 39 },
+// ];
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const blockLogin = import.meta.env.VITE_LOCK_LOGIN === "true";
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const { data: proposalCount } = useGetDistrictWiseProposalCountQuery();
 
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
@@ -106,70 +117,79 @@ const LoginPage = () => {
       <h1 className="text-5xl font-semibold text-white drop-shadow-md">
         Rangla Punjab Vikas Scheme
       </h1>
-      <CardWrapper headerLabel="Login">
-        <Form {...form}>
-          <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="space-y-4">
-              <FormField
-                disabled={blockLogin ? true : false}
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="username"
-                        className="focus-visible:ring-1 focus-visible:ring-blue-800"
-                        placeholder="john.doe"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                disabled={blockLogin ? true : false}
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
+      <div className="flex flex-col lg:flex-row gap-10">
+        <CardWrapper headerLabel="Login">
+          <Form {...form}>
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="space-y-4">
+                <FormField
+                  disabled={blockLogin ? true : false}
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
                         <Input
                           {...field}
-                          type={showPassword ? "text" : "password"}
+                          type="username"
                           className="focus-visible:ring-1 focus-visible:ring-blue-800"
-                          placeholder="**********"
+                          placeholder="john.doe"
                         />
-                        {showPassword ? (
-                          <FaRegEyeSlash
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-[10px] top-[10px]"
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  disabled={blockLogin ? true : false}
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            type={showPassword ? "text" : "password"}
+                            className="focus-visible:ring-1 focus-visible:ring-blue-800"
+                            placeholder="**********"
                           />
-                        ) : (
-                          <FaRegEye
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-[10px] top-[10px]"
-                          />
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormError message={error} />
-            <FormSuccess message={success} />
-            <Button type="submit" className="w-full bg-black text-white">
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
-        </Form>
-      </CardWrapper>
+                          {showPassword ? (
+                            <FaRegEyeSlash
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-[10px] top-[10px]"
+                            />
+                          ) : (
+                            <FaRegEye
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-[10px] top-[10px]"
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormError message={error} />
+              <FormSuccess message={success} />
+              <Button type="submit" className="w-full bg-black text-white">
+                {isLoading ? "Logging in..." : "Login"}
+              </Button>
+            </form>
+          </Form>
+        </CardWrapper>
+        <DataTable
+          columns={getDistrictProposalColumns()}
+          data={proposalCount?.records || []}
+          searchKey="district_name"
+          showColumnSelector={false}
+          defaultPageSize={10}
+        />
+      </div>
     </main>
   );
 };

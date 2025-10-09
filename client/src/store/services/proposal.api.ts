@@ -6,6 +6,7 @@ import type {
     UpdateProposalRequest,
     UpdateProposalResponse,
 } from "@/interfaces/proposal.interface";
+import type { DistrictProposalStatsResponse } from "@/interfaces/stats.interface";
 
 export const proposalApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -36,6 +37,13 @@ export const proposalApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Proposal"],
         }),
+        getDistrictWiseProposalCount: builder.query<DistrictProposalStatsResponse, void>({
+            query: () => ({
+                url: "/public/porposal-district-wise-count",
+                method: "GET",
+            }),
+            providesTags: ["Proposal"],
+        }),
     }),
 });
 
@@ -43,4 +51,5 @@ export const {
     useCreateProposalMutation,
     useGetAllProposalsQuery,
     useUpdateProposalMutation,
+    useGetDistrictWiseProposalCountQuery
 } = proposalApi;

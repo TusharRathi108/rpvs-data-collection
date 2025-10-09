@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
 
-//* file imports
+//* ui imports
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -30,7 +30,38 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+//* types
 import type { DataTableProps } from "@/interfaces/data-table.interface";
+
+interface ExtendedDataTableProps<TData, TValue>
+  extends DataTableProps<TData, TValue> {
+  /** show/hide column selector */
+  showColumnSelector?: boolean;
+
+  /** show/hide pagination */
+  showPagination?: boolean;
+
+  /** default number of records per page */
+  defaultPageSize?: number;
+
+  /** custom classNames for styling */
+  classNames?: {
+    wrapper?: string;
+    header?: string;
+    search?: string;
+    columnSelector?: string;
+    tableWrapper?: string;
+    pagination?: string;
+  };
+}
 
 export function DataTable<TData, TValue>({
   columns,
@@ -38,11 +69,14 @@ export function DataTable<TData, TValue>({
   searchKey = "",
   showColumnSelector = true,
   showPagination = true,
-}: DataTableProps<TData, TValue>) {
+  defaultPageSize = 10,
+  classNames = {},
+}: ExtendedDataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [pageSize, setPageSize] = useState(defaultPageSize);
 
   const table = useReactTable({
     data,
@@ -61,11 +95,26 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
+    initialState: {
+      pagination: { pageSize: defaultPageSize },
+    },
   });
 
+  // Update table page size when dropdown changes
+  const handlePageSizeChange = (value: string) => {
+    const size = parseInt(value, 10);
+    setPageSize(size);
+    table.setPageSize(size);
+  };
+
   return (
-    <div className="w-full p-2 bg-white rounded-2xl text-black">
-      <div className="flex items-center py-4">
+    <div
+      className={`w-full p-2 bg-white rounded-2xl text-black ${
+        classNames.wrapper || ""
+      }`}
+    >
+      {/* ===== Header Section (Search + Columns Dropdown) ===== */}
+      <div className={`flex items-center py-4 ${classNames.header || ""}`}>
         {searchKey && (
           <Input
             placeholder={`Filter ${searchKey}...`}
@@ -75,14 +124,21 @@ export function DataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn(searchKey)?.setFilterValue(event.target.value)
             }
-            className="max-w-sm"
+            className={`max-w-sm focus-visible:ring-0 focus-visible:outline-none ${
+              classNames.search || ""
+            }`}
           />
         )}
 
         {showColumnSelector && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto bg-white">
+              <Button
+                variant="outline"
+                className={`ml-auto bg-white ${
+                  classNames.columnSelector || ""
+                }`}
+              >
                 Columns <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -90,42 +146,43 @@ export function DataTable<TData, TValue>({
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-md border">
+      {/* ===== Table Wrapper ===== */}
+      <div
+        className={`overflow-hidden rounded-md border ${
+          classNames.tableWrapper || ""
+        }`}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -160,14 +217,38 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* ===== Pagination ===== */}
       {showPagination && (
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="text-muted-foreground flex-1 text-sm">
+        <div
+          className={`flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 py-4 ${
+            classNames.pagination || ""
+          }`}
+        >
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Rows per page:</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={handlePageSizeChange}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 25, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="text-muted-foreground text-sm">
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
-          <div className="space-x-2">
+
+          <div className="flex space-x-2">
             <Button
               variant="outline"
               size="sm"
