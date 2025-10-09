@@ -117,7 +117,6 @@ const LoginPage = () => {
       <h1 className="text-5xl font-semibold text-white drop-shadow-md">
         Rangla Punjab Vikas Scheme
       </h1>
-      <div className="flex flex-col lg:flex-row gap-10">
         <CardWrapper headerLabel="Login">
           <Form {...form}>
             <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
@@ -182,14 +181,16 @@ const LoginPage = () => {
             </form>
           </Form>
         </CardWrapper>
-        <DataTable
+        <div className="w-[550px] text-center">
+          <h1 className="bg-black text-white rounded-lg mb-2 text-2xl">DISTRICT-WISE PROPOSAL ENTRY STATUS</h1>
+          <DataTable
           columns={getDistrictProposalColumns()}
           data={proposalCount?.records || []}
           searchKey="district_name"
           showColumnSelector={false}
           defaultPageSize={10}
         />
-      </div>
+        </div>
     </main>
   );
 };
