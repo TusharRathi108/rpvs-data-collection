@@ -355,6 +355,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
       }
 
       form.reset();
+      ``;
       onSuccess?.();
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to save proposal");
@@ -1507,23 +1508,26 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
                 !isSectorSelected || (hasSubSectors && !isSubSectorSelected);
 
               return (
-                <FormItem className="flex flex-col flex-1">
+                <FormItem className="flex flex-col flex-1 relative">
                   <FormLabel>
                     Permissible Works <span className="text-red-500">*</span>
                   </FormLabel>
-                  <MultiSelectWithBadges
-                    options={permissibleWorksOptions}
-                    values={field.value || []}
-                    onChange={(vals) =>
-                      form.setValue("permissible_work", vals, {
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder="Select Works"
-                    badgeColor="bg-green-500"
-                    badgeClassName="w-[150px] truncate"
-                    disabled={disableWorks}
-                  />
+                  <div className="relative">
+                    <MultiSelectWithBadges
+                      options={permissibleWorksOptions}
+                      values={field.value || []}
+                      onChange={(vals) =>
+                        form.setValue("permissible_work", vals, {
+                          shouldDirty: true,
+                        })
+                      }
+                      placeholder="Select Works"
+                      badgeColor="bg-green-500"
+                      badgeClassName="w-[150px] truncate"
+                      disabled={disableWorks}
+                      popOverContentClass="w-2/3"
+                    />
+                  </div>
                 </FormItem>
               );
             }}

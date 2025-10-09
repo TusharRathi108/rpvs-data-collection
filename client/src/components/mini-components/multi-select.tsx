@@ -30,6 +30,7 @@ interface MultiSelectWithBadgesProps {
   badgeColor?: string;
   badgeClassName?: string;
   disabled?: boolean;
+  popOverContentClass?: string;
 }
 
 export function MultiSelectWithBadges({
@@ -40,6 +41,7 @@ export function MultiSelectWithBadges({
   badgeColor = "bg-blue-500",
   badgeClassName,
   disabled = false,
+  popOverContentClass,
 }: MultiSelectWithBadgesProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -81,12 +83,16 @@ export function MultiSelectWithBadges({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[250px] bg-white focus-visible:outline-none p-0">
+      <PopoverContent
+        className={cn(
+          `w-[250px] bg-white focus-visible:outline-none p-2 ${popOverContentClass}`
+        )}
+      >
         <Command>
           <CommandInput
             placeholder={`Search ${placeholder.toLowerCase()}...`}
           />
-          <CommandList className="focus-visible:outline-none">
+          <CommandList className=" focus-visible:outline-none">
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((opt, index) => {
@@ -102,7 +108,7 @@ export function MultiSelectWithBadges({
                     <span className="w-6 text-gray-500">{index + 1}.</span>
 
                     {/* Label */}
-                    <span className="flex-1 truncate">{opt.label}</span>
+                    <span className="flex-1 text-wrap">{opt.label}</span>
 
                     {/* Selection icon */}
                     {isSelected ? (
