@@ -50,6 +50,11 @@ const fetchBudgetDetails = async (request: Request, response: Response) => {
             {
                 $match: { isDeleted: false },
             },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            }
         ];
 
         if (user.role_name === "PLANNING") {

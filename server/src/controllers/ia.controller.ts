@@ -43,7 +43,7 @@ const fetchImplementationAgencies = async (request: Request, response: Response)
             isDeleted: false,
         })
             .collation({ locale: "en", strength: 2 })
-            .sort({ agency_name: 1 })
+            .sort({ createdAt: -1 })
             .lean();
 
         return successHandler({

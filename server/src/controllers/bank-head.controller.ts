@@ -64,6 +64,7 @@ const fetchBankDetails = async (request: Request, response: Response) => {
         const pipeline: PipelineStage[] = [
             {
                 $match: {
+                    district_code: user.district_code,
                     isDeleted: false,
                     ...(agency_details === "true"
                         ? { agency_id: { $ne: null } }
@@ -79,6 +80,11 @@ const fetchBankDetails = async (request: Request, response: Response) => {
                             agency_id: 1,
                             agency_name: 1,
                         },
+            },
+            {
+                $sort: {
+                    createdAt: -1,
+                },
             },
         ];
 

@@ -772,9 +772,7 @@ const ProposalForm = ({ initialData, onSuccess }: ProposalFormProps) => {
             name="ifsc_code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  IFSC Code <span className="text-red-500">*</span>
-                </FormLabel>
+                <FormLabel>IFSC Code</FormLabel>
 
                 <SingleSelectWithNumbering
                   options={

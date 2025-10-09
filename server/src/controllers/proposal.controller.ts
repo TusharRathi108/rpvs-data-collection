@@ -563,6 +563,11 @@ const fetchProposalDetails = async (request: Request, response: Response) => {
                     progress: 0,
                 },
             },
+            {
+                $sort: {
+                    createdAt: -1,
+                }
+            }
         ];
 
         const result = await ProposalMasterModel.aggregate(pipeline)

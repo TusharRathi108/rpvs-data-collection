@@ -38,7 +38,8 @@ const createDepartment = async (request: Request, response: Response) => {
 
 const fetchDepartments = async (request: Request, response: Response) => {
     try {
-        const result = await DepartmentModel.find({ isDeleted: false }).lean();
+        const result = await DepartmentModel.find({ isDeleted: false }).sort({ createdAt: -1 })
+            .lean();
 
         successHandler({
             response,
