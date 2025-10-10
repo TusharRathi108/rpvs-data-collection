@@ -10,24 +10,24 @@ const createBankMasterSchema = (role_name: string, isEdit = false) => {
         district_code: z.string().optional(),
         district_name: z.string().optional(),
 
-        rbo: z.string(),
+        // rbo: z.string(),
         ifsc_code: z.string().min(1, "IFSC code is required"),
         account_number: z.string().min(6, "Account number is required"),
 
         branch_code: z.string(),
         branch_name: z.string().min(1, "Branch name is required"),
 
-        branch_manager_name: z.string(),
-        contact_number: z
-            .string()
-            .trim()
-            .refine((val) => /^\d{10}$/.test(val), {
-                message: "Contact number must be 10 digits",
-            }),
+        // branch_manager_name: z.string(),
+        // contact_number: z
+        //     .string()
+        //     .trim()
+        //     .refine((val) => /^\d{10}$/.test(val), {
+        //         message: "Contact number must be 10 digits",
+        //     }),
 
         bank_name: z.string().min(1, "Bank name is required"),
 
-        remarks: z.string()
+        remarks: z.string().optional()
     };
 
     if (role_name === "District") {

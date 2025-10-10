@@ -34,8 +34,8 @@ import TextInput from "@/components/mini-components/text-input";
 import { useGetImplementationAgenciesDistrictWiseQuery } from "@/store/services/ia.api";
 
 //? helpers
-const getDefaultValues = (): BankMasterFormValues => ({
-  district_id: "",
+const getDefaultValues = (userDistrictId?: string): BankMasterFormValues => ({
+  district_id: userDistrictId ?? "",
   agency_id: "",
   agency_name: "",
   bank_name: "",
@@ -43,9 +43,6 @@ const getDefaultValues = (): BankMasterFormValues => ({
   ifsc_code: "",
   branch_code: "",
   branch_name: "",
-  branch_manager_name: "",
-  rbo: "",
-  contact_number: "",
   remarks: "",
 });
 
@@ -62,11 +59,11 @@ const parsePayload = (
     district_id: values.district_id ?? "",
     district_code: selectedDistrict?.district_code ?? "",
     district_name: selectedDistrict?.district_name ?? "",
-    rbo: values.rbo ?? "",
+    // rbo: values.rbo ?? "",
     branch_name: values.branch_name ?? "",
     branch_code: values.branch_code ?? "BR001",
-    contact_number: values.contact_number ?? "",
-    branch_manager_name: values.branch_manager_name ?? "",
+    // contact_number: values.contact_number ?? "",
+    // branch_manager_name: values.branch_manager_name ?? "",
   };
 };
 
@@ -81,12 +78,17 @@ const BankMasterForm = ({
 
   // console.log("DISTRICT INFO: ", userDistrictId);
 
+  const hydratedDefaults = initialData
+    ? {
+        ...getDefaultValues(),
+        ...initialData,
+        district_id: initialData.district_id ?? userDistrictId ?? "",
+      }
+    : { ...getDefaultValues(), district_id: userDistrictId ?? "" };
+
   const form = useForm<BankMasterFormValues>({
     resolver: zodResolver(createBankMasterSchema(role_name)),
-    defaultValues: {
-      ...getDefaultValues(),
-      district_id: initialData?.district_id || userDistrictId || "",
-    },
+    defaultValues: hydratedDefaults,
   });
 
   const selectedDistrictId =
@@ -113,24 +115,31 @@ const BankMasterForm = ({
   const onSubmit = async (values: BankMasterFormValues) => {
     const payload = parsePayload(values, districts);
 
-    // console.log("PAYLOAD: ", payload);
-    // console.log("INITIAL ID: ", initialData);
-    // return;
-
     try {
       if (initialData?._id) {
+        // --- UPDATE CASE
         await updateBankHead({
           bank_head_id: initialData._id,
           payload,
         }).unwrap();
         toast.success("Bank Head updated successfully");
       } else {
+        // --- CREATE CASE
         await createBankHead(payload).unwrap();
         toast.success("Bank Head created successfully");
       }
 
+      // ✅ Trigger any parent refresh
       onSuccess?.();
-      form.reset(getDefaultValues());
+
+      // ✅ Reset form intelligently based on user role
+      if (role_name === "District") {
+        // keep user’s district_id intact
+        form.reset(getDefaultValues(userDistrictId), { keepErrors: false });
+      } else {
+        // reset everything (non-District users choose again)
+        form.reset(getDefaultValues(), { keepErrors: false });
+      }
     } catch (error: unknown) {
       const apiError = error as ApiError;
       toast.error(
@@ -138,12 +147,10 @@ const BankMasterForm = ({
           apiError?.data?.message ||
           "Failed to submit bank head"
       );
-    } finally {
-      form.reset(getDefaultValues());
     }
   };
 
-  //* hydrate form when editing
+  // //* hydrate form when editing
   useEffect(() => {
     if (initialData?.ifsc_code && ifscData?.records) {
       const match = ifscData.records.find(
@@ -188,12 +195,12 @@ const BankMasterForm = ({
         ifsc_code: initialData.ifsc_code ?? "",
         branch_code: initialData.branch_code ?? "",
         branch_name: initialData.branch_name ?? "",
-        branch_manager_name: initialData.branch_manager_name ?? "",
-        rbo: initialData.rbo ?? "",
-        contact_number: initialData.contact_number
-          ? initialData.contact_number.toString().padStart(10, "0")
-          : "",
-        remarks: initialData.remarks ?? "",
+        // branch_manager_name: initialData.branch_manager_name ?? "",
+        // rbo: initialData.rbo ?? "",
+        // contact_number: initialData.contact_number
+        //   ? initialData.contact_number.toString().padStart(10, "0")
+        //   : "",
+        // remarks: initialData.remarks ?? "",
       });
     } else if (userDistrictId) {
       form.reset({
@@ -273,24 +280,24 @@ const BankMasterForm = ({
                       shouldDirty: true,
                     }
                   );
-                  form.setValue(
-                    "branch_manager_name",
-                    record.branch_manager_name ?? "",
-                    { shouldDirty: true }
-                  );
-                  form.setValue(
-                    "contact_number",
-                    record.contact_number.toString() ?? "",
-                    {
-                      shouldDirty: true,
-                    }
-                  );
-                  form.setValue("rbo", record.rbo ?? "", {
-                    shouldDirty: true,
-                  });
-                  form.setValue("remarks", record.remarks ?? "", {
-                    shouldDirty: true,
-                  });
+                  // form.setValue(
+                  //   "branch_manager_name",
+                  //   record.branch_manager_name ?? "",
+                  //   { shouldDirty: true }
+                  // );
+                  // form.setValue(
+                  //   "contact_number",
+                  //   record.contact_number.toString() ?? "",
+                  //   {
+                  //     shouldDirty: true,
+                  //   }
+                  // );
+                  // form.setValue("rbo", record.rbo ?? "", {
+                  //   shouldDirty: true,
+                  // });
+                  // form.setValue("remarks", record.remarks ?? "", {
+                  //   shouldDirty: true,
+                  // });
                 }
               }}
             />

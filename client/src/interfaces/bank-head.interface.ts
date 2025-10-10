@@ -8,14 +8,14 @@ export interface BankHead {
     agency_name?: string;
     account_number: string;
 
-    rbo: string;
+    // rbo: string;
     ifsc_code: string;
     branch_code: string;
     branch_name: string;
     bank_name: string;
-    branch_manager_name: string;
-    contact_number: string;
-    remarks: string;
+    // branch_manager_name: string;
+    // contact_number: string;
+    // remarks: string;
 }
 
 export interface CreateBankHeadRequest {
@@ -27,14 +27,14 @@ export interface CreateBankHeadRequest {
     agency_name?: string;
     account_number: string;
 
-    rbo: string;
+    // rbo: string;
     ifsc_code: string;
     branch_code: string;
     branch_name: string;
     bank_name: string;
-    branch_manager_name: string;
-    contact_number: string;
-    remarks: string;
+    // branch_manager_name: string;
+    // contact_number: string;
+    // remarks: string;
 }
 
 export interface CreateBankHeadResponse {
@@ -54,14 +54,14 @@ export interface BankDetails {
     agency_name?: string
     account_number: string
 
-    rbo: string;
+    // rbo: string;
     ifsc_code: string;
     branch_code: string;
     branch_name: string;
     bank_name: string;
-    branch_manager_name: string;
-    contact_number: number;
-    remarks: string;
+    // branch_manager_name: string;
+    // contact_number: number;
+    // remarks: string;
 }
 
 export interface FetchBankHeadResponse {

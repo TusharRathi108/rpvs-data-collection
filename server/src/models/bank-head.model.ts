@@ -31,7 +31,6 @@ const bankMasterSchema = new Schema<BankMasterDocument>(
 
         rbo: {
             type: String,
-            required: true,
             trim: true,
         },
         ifsc_code: {
@@ -56,16 +55,11 @@ const bankMasterSchema = new Schema<BankMasterDocument>(
         },
         branch_manager_name: {
             type: String,
-            required: true,
             trim: true,
         },
         contact_number: {
             type: Number,
-            required: true,
-            validate: {
-                validator: (v: number) => /^[0-9]{10}$/.test(String(v)),
-                message: "Contact number must be a 10-digit number",
-            },
+            default: null
         },
         remarks: {
             type: String,

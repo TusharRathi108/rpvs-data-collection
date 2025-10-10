@@ -14,7 +14,7 @@ const getBankHeadBaseSchema = (role_name: string) =>
         district_code: z.string().trim().min(1, "District code is required"),
         district_name: z.string().trim().min(1, "District name is required"),
 
-        rbo: z.string().trim().min(1, "RBO is required"),
+        // rbo: z.string().trim().min(1, "RBO is required"),
 
         agency_name:
             role_name === "District"
@@ -37,11 +37,11 @@ const getBankHeadBaseSchema = (role_name: string) =>
         branch_name: z.string().trim().min(1, "Branch name is required"),
         branch_code: z.string().trim().min(1, "Branch code is required"),
 
-        branch_manager_name: z.string().trim().min(1, "Branch manager is required"),
-        contact_number: z
-            .string()
-            .trim()
-            .regex(/^[0-9]{10}$/, "Contact number must be 10 digits"),
+        // branch_manager_name: z.string().trim().min(1, "Branch manager is required"),
+        // contact_number: z
+        //     .string()
+        //     .trim()
+        //     .regex(/^[0-9]{10}$/, "Contact number must be 10 digits"),
 
         remarks: z.string().trim().optional(),
     });

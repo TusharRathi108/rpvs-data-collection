@@ -12,6 +12,7 @@ import authRouter from "@/routes/auth.route";
 import passport from "@/globals/passport-service";
 // import { fetchUsers } from "@/controllers/user.controller";
 import publicProposal from "@/routes/public-routes/proposal-count.route";
+// import { auditLogger } from "@/middlewares/http-logger";
 
 //? initialize express application 
 const expressApp: Express = express();
@@ -20,6 +21,7 @@ const expressApp: Express = express();
 expressApp.use(corsMiddleware)
 expressApp.use(urlencoded({ extended: true }))
 expressApp.use(json())
+// expressApp.use(auditLogger)
 expressApp.use(cookieParser())
 
 expressApp.use(
@@ -34,6 +36,7 @@ expressApp.use(
         }
     })
 );
+
 expressApp.use(passport.initialize());
 expressApp.use(passport.session());
 

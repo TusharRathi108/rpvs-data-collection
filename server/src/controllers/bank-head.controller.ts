@@ -64,11 +64,15 @@ const fetchBankDetails = async (request: Request, response: Response) => {
         const pipeline: PipelineStage[] = [
             {
                 $match: {
-                    district_code: user.district_code,
                     isDeleted: false,
                     ...(agency_details === "true"
-                        ? { agency_id: { $ne: null } }
-                        : { agency_id: null }),
+                        ? {
+                            district_code: user.district_code,
+                            agency_id: { $ne: null },
+                        }
+                        : {
+                            agency_id: null,
+                        }),
                 },
             },
             {
@@ -82,12 +86,9 @@ const fetchBankDetails = async (request: Request, response: Response) => {
                         },
             },
             {
-                $sort: {
-                    createdAt: -1,
-                },
+                $sort: { createdAt: -1 },
             },
         ];
-
 
         const result = await BankMasterModel.aggregate(pipeline);
 
