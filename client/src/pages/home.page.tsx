@@ -175,7 +175,9 @@ const HomePage = () => {
     data: proposalsData,
     isLoading: proposalsLoading,
     error: proposalsError,
-  } = useGetAllProposalsQuery();
+  } = useGetAllProposalsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const {
     data: departmentsData,
