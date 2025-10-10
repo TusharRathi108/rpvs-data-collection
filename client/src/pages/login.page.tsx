@@ -104,11 +104,11 @@ const LoginPage = () => {
   }, [user, navigate]);
 
   return (
-    <main className="relative h-screen flex flex-col justify-center items-center gap-7 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
+    <main className="relative py-5 min-h-screen flex flex-col justify-center items-center gap-7 bg-[radial-gradient(ellipse_at_top,theme(colors.sky.400),theme(colors.blue.800))] text-white">
       {blockLogin ? (
         ""
       ) : (
-        <h1 className="bg-yellow-300 rounded-2xl p-5 text-black text-3xl text-center border-3 border-dotted border-black">
+        <h1 className="bg-yellow-300 rounded-2xl p-5 text-black text-xl text-center border-3 border-dotted border-black">
           {/* <p>Data Entry for testing allowed till 1 PM ( Today )</p> */}
           {/* <p>Live entries shall be started from 3 PM ( 8th October 2025 )</p> */}
           <p>Portal enabled for 'LIVE ENTRIES'</p>
