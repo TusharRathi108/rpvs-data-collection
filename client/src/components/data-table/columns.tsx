@@ -572,6 +572,156 @@ const getDistrictProposalColumns = (): ColumnDef<DistrictProposalStats>[] => [
   },
 ];
 
+type PanchayatInformation = {
+  _id: string;
+
+  district_id: string;
+  district_code: string;
+  district_name: string;
+
+  block_id: string;
+  block_code: string;
+  block_name: string;
+
+  panchayat_code: string;
+  panchayat_name: string;
+};
+
+const setColumnsFromPanchayatData = (
+  onEdit: (row: PanchayatInformation) => void,
+  editingRow?: PanchayatInformation | null
+): ColumnDef<PanchayatInformation>[] => [
+  {
+    accessorKey: "district_name",
+    header: () => <div className="text-center">District Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("district_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "block_name",
+    header: () => <div className="text-center">Block Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("block_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "panchayat_name",
+    header: () => <div className="text-center">Panchayat Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("panchayat_name")}</div>
+    ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }: { row: Row<PanchayatInformation> }) => {
+      const isEditing = editingRow?._id === row.original._id;
+
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : "Edit"}
+          </Button>
+        </div>
+      );
+    },
+  },
+];
+
+type VillageInformation = {
+  _id: string;
+
+  district_id: string;
+  district_code: string;
+  district_name: string;
+
+  block_id: string;
+  block_code: string;
+  block_name: string;
+
+  panchayat_id: string;
+  panchayat_code: string;
+  panchayat_name: string;
+
+  village_name: string;
+  hadbast_number: string;
+};
+
+const setColumnsFromVillageData = (
+  onEdit: (row: VillageInformation) => void,
+  editingRow?: VillageInformation | null
+): ColumnDef<VillageInformation>[] => [
+  {
+    accessorKey: "district_name",
+    header: () => <div className="text-center">District Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("district_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "block_name",
+    header: () => <div className="text-center">Block Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("block_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "panchayat_name",
+    header: () => <div className="text-center">Panchayat Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("panchayat_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "hadbast_number",
+    header: () => <div className="text-center">Hadbast Number</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("hadbast_number")}</div>
+    ),
+  },
+  {
+    accessorKey: "village_name",
+    header: () => <div className="text-center">Village Name</div>,
+    cell: ({ row }) => (
+      <div className="text-center">{row.getValue("village_name")}</div>
+    ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }: { row: Row<VillageInformation> }) => {
+      const isEditing = editingRow?._id === row.original._id;
+
+      return (
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(row.original)}
+            className={
+              isEditing
+                ? "text-red-600 hover:text-red-800"
+                : "text-green-600 hover:text-green-800"
+            }
+          >
+            {isEditing ? "Cancel" : "Edit"}
+          </Button>
+        </div>
+      );
+    },
+  },
+];
+
 export {
   type BudgetHead,
   budgetHeadColumns,
@@ -585,4 +735,8 @@ export {
   getImplementationAgencyColumns,
   type DistrictProposalStats,
   getDistrictProposalColumns,
+  type PanchayatInformation,
+  setColumnsFromPanchayatData,
+  type VillageInformation,
+  setColumnsFromVillageData,
 };

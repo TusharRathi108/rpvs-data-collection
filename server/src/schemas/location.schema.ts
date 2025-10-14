@@ -1,15 +1,11 @@
+//* package imports
 import { z } from "zod";
-import { zObjectId } from "@/utils/utility-functions";
-import { AreaType, LocalBodyType } from "@/interfaces/enums.interface";
 
-const zObjectIdOrNull = z
-  .string()
-  .refine((val) => val === "" || /^[a-f\d]{24}$/i.test(val), {
-    message: "Invalid ObjectId",
-  })
-  .transform((val) => (val === "" ? null : val));
+//* file imports
+import { AreaType } from "@/interfaces/enums.interface";
+import { zObjectId, zObjectIdOrNull } from "@/utils/utility-functions";
 
-export const WardSchema = z.object({
+const WardSchema = z.object({
   ward_code: z.string().min(1),
   ward_number: z.string().min(1),
   ward_name: z.string().min(1),
@@ -17,7 +13,7 @@ export const WardSchema = z.object({
   local_body_type_name: z.string().min(1),
 });
 
-export const VillageSchema = z.object({
+const VillageSchema = z.object({
   panchayat_code: z.string().min(1),
   village_code: z.string().min(1),
   village_name: z.string().min(1),
@@ -81,9 +77,19 @@ const UrbanLocationSchema = BaseLocationSchema.extend({
   villages: z.array(VillageSchema).default([]),
 }).loose();
 
-export const LocationSchema = z.discriminatedUnion("area_type", [
+const LocationSchema = z.discriminatedUnion("area_type", [
   RuralLocationSchema,
   UrbanLocationSchema,
 ]);
 
-export type LocationDto = z.infer<typeof LocationSchema>;
+type LocationDto = z.infer<typeof LocationSchema>;
+
+export {
+  WardSchema,
+  VillageSchema,
+  BaseLocationSchema,
+  RuralLocationSchema,
+  UrbanLocationSchema,
+  LocationSchema,
+  LocationDto
+}

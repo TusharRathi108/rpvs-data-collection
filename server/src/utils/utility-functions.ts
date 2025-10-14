@@ -3,34 +3,41 @@ import { randomInt } from "crypto";
 import { SortOrder, Types } from "mongoose";
 import { z, ZodObject, ZodRawShape } from "zod";
 
-export const zObjectId = z
+const zObjectId = z
     .string()
     .refine((value) => Types.ObjectId.isValid(value), {
         message: "Invalid ObjectId",
     })
     .transform((value) => new Types.ObjectId(value));
 
-export const contactNumberValidator = z
+const zObjectIdOrNull = z
+    .string()
+    .refine((val) => val === "" || /^[a-f\d]{24}$/i.test(val), {
+        message: "Invalid ObjectId",
+    })
+    .transform((val) => (val === "" ? null : val));
+
+const contactNumberValidator = z
     .string()
     .regex(/^\d{10}$/, { message: "Contact number must be exactly 10 digits" });
 
-export const istDateSchema = z
+const istDateSchema = z
     .union([z.string(), z.null(), z.undefined()])
     .transform((val) => parseISTDate(val))
     .refine((d) => d === null || d instanceof Date, {
         message: "Invalid date format",
     });
 
-export const asArray = <T>(x: T | T[]) => (Array.isArray(x) ? x : [x]);
+const asArray = <T>(x: T | T[]) => (Array.isArray(x) ? x : [x]);
 
-export const toObjectId = (value: string | Types.ObjectId): Types.ObjectId =>
+const toObjectId = (value: string | Types.ObjectId): Types.ObjectId =>
     typeof value === "string" ? new Types.ObjectId(value) : value;
 
-export function generateOtp() {
+function generateOtp() {
     return String(randomInt(0, 1_000_000)).padStart(6, '0')
 }
 
-export const parseISTDate = (value: string | null | undefined): Date | null => {
+const parseISTDate = (value: string | null | undefined): Date | null => {
     if (!value) return null;
 
     const trimmed = value.trim();
@@ -46,7 +53,7 @@ export const parseISTDate = (value: string | null | undefined): Date | null => {
     return isNaN(parsed.getTime()) ? null : parsed;
 };
 
-export const rejectFields = <T extends ZodRawShape>(
+const rejectFields = <T extends ZodRawShape>(
     schema: ZodObject<T>,
     forbiddenFields: (keyof T | string)[]
 ) =>
@@ -66,7 +73,7 @@ export const rejectFields = <T extends ZodRawShape>(
         });
     });
 
-export function calculateFinancialYear(format: "full" | "short" = "full"): string {
+function calculateFinancialYear(format: "full" | "short" = "full"): string {
     const date = new Date();
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -81,7 +88,7 @@ export function calculateFinancialYear(format: "full" | "short" = "full"): strin
     return `${startYear}-${endYear.toString().slice(-2)}`;
 }
 
-export function normalizeSort<Order extends Record<string, SortOrder>>(
+function normalizeSort<Order extends Record<string, SortOrder>>(
     sort: Order
 ): Record<string, 1 | -1> {
     return Object.fromEntries(
@@ -95,7 +102,7 @@ export function normalizeSort<Order extends Record<string, SortOrder>>(
     );
 }
 
-export function parseDuration(duration: string): number {
+function parseDuration(duration: string): number {
     const match = duration.match(/^(\d+)([smhdy])$/i)
     if (!match) {
         throw new Error("Invalid duration format");
@@ -120,7 +127,7 @@ export function parseDuration(duration: string): number {
     }
 }
 
-export function sanitizeLocation(location: any) {
+function sanitizeLocation(location: any) {
     if (!location) return location;
 
     // --- helper to normalize values ---
@@ -184,4 +191,19 @@ export function sanitizeLocation(location: any) {
     }
 
     return location;
+}
+
+export {
+    zObjectId,
+    zObjectIdOrNull,
+    contactNumberValidator,
+    istDateSchema,
+    asArray,
+    toObjectId,
+    generateOtp,
+    rejectFields,
+    calculateFinancialYear,
+    normalizeSort,
+    parseDuration,
+    sanitizeLocation
 }

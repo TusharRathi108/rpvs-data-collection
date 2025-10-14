@@ -37,13 +37,23 @@ import {
   getDepartmentColumns,
   getImplementationAgencyColumns,
   getProposalColumns,
+  setColumnsFromPanchayatData,
+  setColumnsFromVillageData,
   type BankDetails,
   type BudgetHead,
   type Department,
   type ImplementationAgency,
+  type PanchayatInformation,
   type ProposalMaster,
+  type VillageInformation,
 } from "@/components/data-table/columns";
 import PasswordReset from "@/components/forms/password-reset-form";
+import PanchayatMasterForm from "@/components/forms/panchayat-master";
+import {
+  useFetchAllPanchayatsQuery,
+  useFetchAllVillagesQuery,
+} from "@/store/services/rural.api";
+import VillageMasterForm from "@/components/forms/village-master";
 
 const getTabOptions = (roleName?: string) => {
   if (roleName === "District") {
@@ -83,6 +93,16 @@ const getTabOptions = (roleName?: string) => {
         form: ImplementationAgencyForm,
         searchKey: "agency_name",
       },
+      "panchayat-master": {
+        label: "PANCHAYAT MASTER",
+        form: PanchayatMasterForm,
+        searchKey: "panchayat_name",
+      },
+      "village-master": {
+        label: "VILLAGE MASTER",
+        form: ImplementationAgencyForm,
+        search_key: "village_name",
+      },
     } as const;
   }
 
@@ -112,12 +132,22 @@ const HomePage = () => {
   const [bankTableData, setBankTableData] = useState<BankDetails[]>([]);
   const [budgetTableData, setBudgetTableData] = useState<BudgetHead[]>([]);
   const [iaTableData, setIATableData] = useState<ImplementationAgency[]>([]);
+
   const [proposalTableData, setProposalTableData] = useState<ProposalMaster[]>(
     []
   );
+
   const [departmentTableData, setDepartmentTableData] = useState<Department[]>(
     []
   );
+
+  const [panchayatTableData, setPanchayatTableData] = useState<
+    PanchayatInformation[]
+  >([]);
+
+  const [villageTableData, setVillageTableData] = useState<
+    VillageInformation[]
+  >([]);
 
   const {
     editingRow: editingBudget,
@@ -148,6 +178,18 @@ const HomePage = () => {
     handleToggleEdit: handleIAEdit,
     cancelEdit: cancelIAEdit,
   } = useEditableRow<ImplementationAgency>();
+
+  const {
+    editingRow: editingPanchayat,
+    handleToggleEdit: handlePanchayatEdit,
+    cancelEdit: cancelPanchayatEdit,
+  } = useEditableRow<PanchayatInformation>();
+
+  const {
+    editingRow: editingVillage,
+    handleToggleEdit: handleVillageEdit,
+    cancelEdit: cancelVillageEdit,
+  } = useEditableRow<VillageInformation>();
 
   const [activeTab, setActiveTab] = useState<keyof typeof TAB_OPTIONS>(
     Object.keys(TAB_OPTIONS)[0] as keyof typeof TAB_OPTIONS
@@ -191,6 +233,18 @@ const HomePage = () => {
     error: iaError,
   } = useGetAllImplementationAgenciesQuery();
 
+  const {
+    data: panchayatData,
+    isLoading: panchayatLoading,
+    error: panchayatError,
+  } = useFetchAllPanchayatsQuery();
+
+  const {
+    data: villageData,
+    isLoading: villageLoading,
+    error: villageError,
+  } = useFetchAllVillagesQuery();
+
   const districts = districtsData?.records || [];
 
   const processedBudgetHeads: BudgetHead[] = useMemo(
@@ -231,18 +285,32 @@ const HomePage = () => {
     [iaData]
   );
 
+  const processedPanchayats: PanchayatInformation[] = useMemo(
+    () => panchayatData?.records || [],
+    [panchayatData]
+  );
+
+  const processedVillages: VillageInformation[] = useMemo(
+    () => villageData?.records || [],
+    [villageData]
+  );
+
   useEffect(() => {
     if (budgetHeadsError) console.error(budgetHeadsError);
     if (bankHeadsError) console.error(bankHeadsError);
     if (proposalsError) console.error(proposalsError);
     if (departmentsError) console.error(departmentsError);
     if (iaError) console.error(iaError);
+    if (panchayatError) console.error(panchayatError);
+    if (villageError) console.error(villageError);
   }, [
     budgetHeadsError,
     bankHeadsError,
     proposalsError,
     departmentsError,
     iaError,
+    panchayatError,
+    villageError,
   ]);
 
   useEffect(() => {
@@ -256,6 +324,10 @@ const HomePage = () => {
       setDepartmentTableData(processedDepartments);
     } else if (activeTab === "ia-master") {
       setIATableData(processedIAs);
+    } else if (activeTab === "panchayat-master") {
+      setPanchayatTableData(processedPanchayats);
+    } else if (activeTab === "village-master") {
+      setVillageTableData(processedVillages);
     }
   }, [
     activeTab,
@@ -264,6 +336,8 @@ const HomePage = () => {
     processedProposals,
     processedDepartments,
     processedIAs,
+    processedPanchayats,
+    processedVillages,
   ]);
 
   //* logout
@@ -388,6 +462,28 @@ const HomePage = () => {
       );
     }
 
+    if (activeTab === "panchayat-master") {
+      return (
+        <PanchayatMasterForm
+          initialData={editingPanchayat}
+          onSuccess={cancelPanchayatEdit}
+          districts={districts}
+          isLoading={panchayatLoading}
+        />
+      );
+    }
+
+    if (activeTab === "village-master") {
+      return (
+        <VillageMasterForm
+          initialData={editingVillage}
+          onSuccess={cancelVillageEdit}
+          districts={districts}
+          isLoading={villageLoading}
+        />
+      );
+    }
+
     return null;
   };
 
@@ -456,6 +552,35 @@ const HomePage = () => {
           columns={getImplementationAgencyColumns(handleIAEdit, editingIA)}
           data={iaTableData}
           searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
+    if (activeTab === "panchayat-master") {
+      if (panchayatLoading) return <PageLoader />;
+
+      return (
+        <DataTable
+          columns={setColumnsFromPanchayatData(
+            handlePanchayatEdit,
+            editingPanchayat
+          )}
+          data={panchayatTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.searchKey ?? ""}
+          showPagination
+        />
+      );
+    }
+
+    if (activeTab === "village-master") {
+      if (villageLoading) return <PageLoader />;
+
+      return (
+        <DataTable
+          columns={setColumnsFromVillageData(handleVillageEdit, editingVillage)}
+          data={villageTableData}
+          searchKey={TAB_OPTIONS[activeTab]?.search_key ?? ""}
           showPagination
         />
       );

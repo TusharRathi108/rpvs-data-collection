@@ -5,6 +5,7 @@ import {
   type Path,
   useController,
 } from "react-hook-form";
+import { cn } from "@/lib/utils";
 
 //* file imports
 import {
@@ -24,6 +25,7 @@ interface TextInputProps<T extends FieldValues> {
   disabled?: boolean;
   type?: React.HTMLInputTypeAttribute;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  inputClassStyling?: string;
 }
 
 const TextInput = <T extends FieldValues>({
@@ -34,6 +36,7 @@ const TextInput = <T extends FieldValues>({
   disabled = false,
   type = "text",
   inputMode,
+  inputClassStyling,
 }: TextInputProps<T>) => {
   const {
     field,
@@ -52,6 +55,7 @@ const TextInput = <T extends FieldValues>({
           value={field.value ? String(field.value) : ""}
           maxLength={name === "contact_number" ? 10 : undefined}
           inputMode={inputMode}
+          className={cn(`${inputClassStyling}`)}
           onChange={(e) => {
             let value = e.target.value;
 
